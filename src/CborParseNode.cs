@@ -142,19 +142,12 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <returns>A collection of objects</returns>
         public IEnumerable<T> GetCollectionOfObjectValues<T>(ParsableFactory<T> factory) where T : IParsable
         {
-            throw new NotImplementedException();
-            // if (_jsonNode.ValueKind == JsonValueKind.Array) {
-            //     var enumerator = _jsonNode.EnumerateArray();
-            //     while(enumerator.MoveNext())
-            //     {
-            //         var currentParseNode = new JsonParseNode(enumerator.Current)
-            //         {
-            //             OnAfterAssignFieldValues = OnAfterAssignFieldValues,
-            //             OnBeforeAssignFieldValues = OnBeforeAssignFieldValues
-            //         };
-            //         yield return currentParseNode.GetObjectValue<T>(factory);
-            //     }
-            // }
+            if (reader.PeekState() == CborReaderState.StartArray) {
+                while(reader.PeekState() != CborReaderState.EndArray)
+                {
+                    yield return GetObjectValue<T>(factory);
+                }
+            }
         }
         /// <summary>
         /// Gets the collection of enum values of the node.
@@ -162,20 +155,14 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <returns>The collection of enum values.</returns>
         public IEnumerable<T?> GetCollectionOfEnumValues<T>() where T : struct, Enum
         {
-            throw new NotImplementedException();
-            // if (_jsonNode.ValueKind == JsonValueKind.Array) {
-            //     var enumerator = _jsonNode.EnumerateArray();
-            //     while(enumerator.MoveNext())
-            //     {
-            //         var currentParseNode = new JsonParseNode(enumerator.Current)
-            //         {
-            //             OnAfterAssignFieldValues = OnAfterAssignFieldValues,
-            //             OnBeforeAssignFieldValues = OnBeforeAssignFieldValues
-            //         };
-            //         yield return currentParseNode.GetEnumValue<T>();
-            //     }
-            // }
+                if (reader.PeekState() == CborReaderState.StartArray) {
+                while(reader.PeekState() != CborReaderState.EndArray)
+                {
+                     yield return GetEnumValue<T>();
+                }
+            }
         }
+        
         /// <summary>
         /// Gets the byte array value of the node.
         /// </summary>
