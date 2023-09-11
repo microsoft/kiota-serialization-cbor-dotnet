@@ -11,7 +11,7 @@ jobs:
   build-and-test:
     runs-on: windows-latest # Temporary switch to windows till https://github.com/microsoft/vstest/issues/4549 is released in dotnet version after 7.0.400
     env:
-      solutionName: Microsoft.Kiota.Serialization.Json.sln
+      solutionName: Microsoft.Kiota.Serialization.Cbor.sln
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
