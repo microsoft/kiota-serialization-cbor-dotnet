@@ -9,7 +9,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests;
 public class UnionWrapperParseTests {
     private readonly CborParseNodeFactory _parseNodeFactory = new();
     private readonly CborSerializationWriterFactory _serializationWriterFactory = new();
-    private const string contentType = "application/json";
+    private const string contentType = "application/cbor";
     [Fact]
     public void ParsesUnionTypeComplexProperty1()
     {

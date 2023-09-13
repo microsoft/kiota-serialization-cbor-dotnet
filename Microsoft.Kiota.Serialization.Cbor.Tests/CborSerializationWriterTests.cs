@@ -32,11 +32,11 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
                     {"manager", new TestEntity{Id = "48d31887-5fad-4d73-a9f5-3c356e68a038"}}, // write nested object value
                 }
             };
-            using var jsonSerializerWriter = new CborSerializationWriter();
+            using var cborSerializerWriter = new CborSerializationWriter();
             // Act
-            jsonSerializerWriter.WriteObjectValue(string.Empty,testEntity);
-            // Get the json string from the stream.
-            var serializedStream = jsonSerializerWriter.GetSerializedContent();
+            cborSerializerWriter.WriteObjectValue(string.Empty,testEntity);
+            // Get the payload from the stream.
+            var serializedStream = cborSerializerWriter.GetSerializedContent();
             using var reader = new StreamReader(serializedStream, Encoding.UTF8);
             var serializedCborString = reader.ReadToEnd();
             
@@ -96,7 +96,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
             using var cborSerializerWriter = new CborSerializationWriter();
             // Act
             cborSerializerWriter.WriteObjectValue(string.Empty, testEntity);
-            // Get the json string from the stream.
+            // Get the payload from the stream.
             var serializedStream = cborSerializerWriter.GetSerializedContent();
             using var reader = new StreamReader(serializedStream, Encoding.UTF8);
             var serializedCborString = reader.ReadToEnd();
@@ -137,11 +137,11 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
                 }
             };
             var entityList = new List<TestEntity>() { testEntity};
-            using var jsonSerializerWriter = new CborSerializationWriter();
+            using var cborSerializerWriter = new CborSerializationWriter();
             // Act
-            jsonSerializerWriter.WriteCollectionOfObjectValues(string.Empty, entityList);
-            // Get the json string from the stream.
-            var serializedStream = jsonSerializerWriter.GetSerializedContent();
+            cborSerializerWriter.WriteCollectionOfObjectValues(string.Empty, entityList);
+            // Get the payload from the stream.
+            var serializedStream = cborSerializerWriter.GetSerializedContent();
             using var reader = new StreamReader(serializedStream, Encoding.UTF8);
             var serializedCborString = reader.ReadToEnd();
 
@@ -169,11 +169,11 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
                 TestNamingEnum = TestNamingEnum.Item1,
             };
             var entityList = new List<TestEntity>() { testEntity };
-            using var jsonSerializerWriter = new CborSerializationWriter();
+            using var cborSerializerWriter = new CborSerializationWriter();
             // Act
-            jsonSerializerWriter.WriteCollectionOfObjectValues(string.Empty, entityList);
-            // Get the json string from the stream.
-            var serializedStream = jsonSerializerWriter.GetSerializedContent();
+            cborSerializerWriter.WriteCollectionOfObjectValues(string.Empty, entityList);
+            // Get the payload from the stream.
+            var serializedStream = cborSerializerWriter.GetSerializedContent();
             using var reader = new StreamReader(serializedStream, Encoding.UTF8);
             var serializedCborString = reader.ReadToEnd();
 
@@ -193,11 +193,11 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
                 TestNamingEnum = TestNamingEnum.Item2SubItem1,
             };
             var entityList = new List<TestEntity>() { testEntity };
-            using var jsonSerializerWriter = new CborSerializationWriter();
+            using var cborSerializerWriter = new CborSerializationWriter();
             // Act
-            jsonSerializerWriter.WriteCollectionOfObjectValues(string.Empty, entityList);
-            // Get the json string from the stream.
-            var serializedStream = jsonSerializerWriter.GetSerializedContent();
+            cborSerializerWriter.WriteCollectionOfObjectValues(string.Empty, entityList);
+            // Get the payload from the stream.
+            var serializedStream = cborSerializerWriter.GetSerializedContent();
             using var reader = new StreamReader(serializedStream, Encoding.UTF8);
             var serializedCborString = reader.ReadToEnd();
 

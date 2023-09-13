@@ -8,20 +8,20 @@ using Microsoft.Kiota.Abstractions.Serialization;
 namespace Microsoft.Kiota.Serialization.Cbor
 {
     /// <summary>
-    /// The <see cref="ISerializationWriterFactory"/> implementation for the json content type
+    /// The <see cref="ISerializationWriterFactory"/> implementation for the cbor content type
     /// </summary>
     public class CborSerializationWriterFactory : ISerializationWriterFactory
     {
         /// <summary>
-        /// The valid content type for json
+        /// The valid content type for cbor
         /// </summary>
-        public string ValidContentType { get; } = "application/json";
+        public string ValidContentType { get; } = "application/cbor";
 
         /// <summary>
         /// Get a valid <see cref="ISerializationWriter"/> for the content type
         /// </summary>
         /// <param name="contentType">The content type to search for</param>
-        /// <returns>A <see cref="ISerializationWriter"/> instance for json writing</returns>
+        /// <returns>A <see cref="ISerializationWriter"/> instance for cbor writing</returns>
         public ISerializationWriter GetSerializationWriter(string contentType)
         {
             if(string.IsNullOrEmpty(contentType))

@@ -7,35 +7,35 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
 {
     public class CborParseNodeFactoryTests
     {
-        private readonly CborParseNodeFactory _jsonParseNodeFactory;
+        private readonly CborParseNodeFactory _cborParseNodeFactory;
         private const string TestCborString = "{\"key\":\"value\"}";
 
         public CborParseNodeFactoryTests()
         {
-            _jsonParseNodeFactory = new CborParseNodeFactory();
+            _cborParseNodeFactory = new CborParseNodeFactory();
         }
 
         [Fact]
         public void GetsWriterForCborContentType()
         {
-            using var jsonStream = new MemoryStream(Encoding.UTF8.GetBytes(TestCborString));
-            var jsonWriter = _jsonParseNodeFactory.GetRootParseNode(_jsonParseNodeFactory.ValidContentType,jsonStream);
+            using var cborStream = new MemoryStream(Encoding.UTF8.GetBytes(TestCborString));
+            var cborWriter = _cborParseNodeFactory.GetRootParseNode(_cborParseNodeFactory.ValidContentType,cborStream);
 
             // Assert
-            Assert.NotNull(jsonWriter);
-            Assert.IsAssignableFrom<CborParseNode>(jsonWriter);
+            Assert.NotNull(cborWriter);
+            Assert.IsAssignableFrom<CborParseNode>(cborWriter);
         }
 
         [Fact]
         public void ThrowsArgumentOutOfRangeExceptionForInvalidContentType()
         {
             var streamContentType = "application/octet-stream";
-            using var jsonStream = new MemoryStream(Encoding.UTF8.GetBytes(TestCborString));
-            var exception = Assert.Throws<ArgumentOutOfRangeException>(() => _jsonParseNodeFactory.GetRootParseNode(streamContentType,jsonStream));
+            using var cborStream = new MemoryStream(Encoding.UTF8.GetBytes(TestCborString));
+            var exception = Assert.Throws<ArgumentOutOfRangeException>(() => _cborParseNodeFactory.GetRootParseNode(streamContentType,cborStream));
 
             // Assert
             Assert.NotNull(exception);
-            Assert.Equal($"expected a {_jsonParseNodeFactory.ValidContentType} content type", exception.ParamName);
+            Assert.Equal($"expected a {_cborParseNodeFactory.ValidContentType} content type", exception.ParamName);
         }
 
         [Theory]
@@ -43,8 +43,8 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         [InlineData("")]
         public void ThrowsArgumentNullExceptionForNoContentType(string contentType)
         {
-            using var jsonStream = new MemoryStream(Encoding.UTF8.GetBytes(TestCborString));
-            var exception = Assert.Throws<ArgumentNullException>(() => _jsonParseNodeFactory.GetRootParseNode(contentType,jsonStream));
+            using var cborStream = new MemoryStream(Encoding.UTF8.GetBytes(TestCborString));
+            var exception = Assert.Throws<ArgumentNullException>(() => _cborParseNodeFactory.GetRootParseNode(contentType,cborStream));
 
             // Assert
             Assert.NotNull(exception);

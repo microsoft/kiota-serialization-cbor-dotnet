@@ -28,7 +28,7 @@ $nugetPackageName = (Get-ChildItem (Join-Path $packageDirPath *.nupkg) -Exclude 
 Write-Host "Found NuGet package: $nugetPackageName" -ForegroundColor Magenta
 
 ## Extracts the package version from nupkg file name.
-$packageVersion = $nugetPackageName.Replace("Microsoft.Kiota.Serialization.Json.", "").Replace(".nupkg", "")
+$packageVersion = $nugetPackageName.Replace("Microsoft.Kiota.Serialization.Cbor.", "").Replace(".nupkg", "")
 
 Write-Host "##vso[task.setvariable variable=VERSION_STRING]$($packageVersion)";
 Write-Host "Updated the VERSION_STRING environment variable with the package version value '$packageVersion'." -ForegroundColor Green

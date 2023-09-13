@@ -32,67 +32,67 @@ namespace Microsoft.Kiota.Serialization.Cbor
         }
 
         /// <summary>
-        /// Get the string value from the json node
+        /// Get the string value from the cbor node
         /// </summary>
         /// <returns>A string value</returns>
         public string? GetStringValue() => reader.ReadTextString();
 
         /// <summary>
-        /// Get the boolean value from the json node
+        /// Get the boolean value from the cbor node
         /// </summary>
         /// <returns>A boolean value</returns>
         public bool? GetBoolValue() => reader.ReadBoolean();
 
         /// <summary>
-        /// Get the byte value from the json node
+        /// Get the byte value from the cbor node
         /// </summary>
         /// <returns>A byte value</returns>
         public byte? GetByteValue() => throw new NotImplementedException();
 
         /// <summary>
-        /// Get the sbyte value from the json node
+        /// Get the sbyte value from the cbor node
         /// </summary>
         /// <returns>A sbyte value</returns>
         public sbyte? GetSbyteValue() => throw new NotImplementedException();
 
         /// <summary>
-        /// Get the int value from the json node
+        /// Get the int value from the cbor node
         /// </summary>
         /// <returns>A int value</returns>
         public int? GetIntValue() => reader.ReadInt32();
 
         /// <summary>
-        /// Get the float value from the json node
+        /// Get the float value from the cbor node
         /// </summary>
         /// <returns>A float value</returns>
         public float? GetFloatValue() => reader.ReadSingle();
 
         /// <summary>
-        /// Get the Long value from the json node
+        /// Get the Long value from the cbor node
         /// </summary>
         /// <returns>A Long value</returns>
         public long? GetLongValue() => reader.ReadInt64();
 
         /// <summary>
-        /// Get the double value from the json node
+        /// Get the double value from the cbor node
         /// </summary>
         /// <returns>A double value</returns>
         public double? GetDoubleValue() => reader.ReadDouble();
 
         /// <summary>
-        /// Get the decimal value from the json node
+        /// Get the decimal value from the cbor node
         /// </summary>
         /// <returns>A decimal value</returns>
         public decimal? GetDecimalValue() => reader.ReadDecimal();
 
         /// <summary>
-        /// Get the guid value from the json node
+        /// Get the guid value from the cbor node
         /// </summary>
         /// <returns>A guid value</returns>
         public Guid? GetGuidValue() => throw new NotImplementedException();
 
         /// <summary>
-        /// Get the <see cref="DateTimeOffset"/> value from the json node
+        /// Get the <see cref="DateTimeOffset"/> value from the cbor node
         /// </summary>
         /// <returns>A <see cref="DateTimeOffset"/> value</returns>
         public DateTimeOffset? GetDateTimeOffsetValue() {
@@ -100,7 +100,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
             }
 
         /// <summary>
-        /// Get the <see cref="TimeSpan"/> value from the json node
+        /// Get the <see cref="TimeSpan"/> value from the cbor node
         /// </summary>
         /// <returns>A <see cref="TimeSpan"/> value</returns>
         public TimeSpan? GetTimeSpanValue()
@@ -109,7 +109,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         }
 
         /// <summary>
-        /// Get the <see cref="Date"/> value from the json node
+        /// Get the <see cref="Date"/> value from the cbor node
         /// </summary>
         /// <returns>A <see cref="Date"/> value</returns>
         public Date? GetDateValue()
@@ -118,7 +118,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         }
 
         /// <summary>
-        /// Get the <see cref="Time"/> value from the json node
+        /// Get the <see cref="Time"/> value from the cbor node
         /// </summary>
         /// <returns>A <see cref="Time"/> value</returns>
         public Time? GetTimeValue()
@@ -127,7 +127,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         }
 
         /// <summary>
-        /// Get the enumeration value of type <typeparam name="T"/>from the json node
+        /// Get the enumeration value of type <typeparam name="T"/>from the cbor node
         /// </summary>
         /// <returns>An enumeration value or null</returns>
         public T? GetEnumValue<T>() where T : struct, Enum
@@ -136,7 +136,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         }
 
         /// <summary>
-        /// Get the collection of type <typeparam name="T"/>from the json node
+        /// Get the collection of type <typeparam name="T"/>from the cbor node
         /// </summary>
         /// <param name="factory">The factory to use to create the model object.</param>
         /// <returns>A collection of objects</returns>
@@ -189,7 +189,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         private static readonly Type timeType = typeof(Time?);
 
         /// <summary>
-        /// Get the collection of primitives of type <typeparam name="T"/>from the json node
+        /// Get the collection of primitives of type <typeparam name="T"/>from the cbor node
         /// </summary>
         /// <returns>A collection of objects</returns>
         public IEnumerable<T> GetCollectionOfPrimitiveValues<T>()
@@ -243,7 +243,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         private CborReader reader { get; }
 
         /// <summary>
-        /// Get the object of type <typeparam name="T"/>from the json node
+        /// Get the object of type <typeparam name="T"/>from the cbor node
         /// </summary>
         /// <param name="factory">The factory to use to create the model object.</param>
         /// <returns>A object of the specified type</returns>
@@ -274,7 +274,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
                 if(fieldDeserializers.ContainsKey(fieldName))
                 {
                     if(reader.PeekState() == CborReaderState.Null)
-                        continue;// If the property is already null just continue. As calling functions like GetDouble,GetBoolValue do not process JsonValueKind.Null.
+                        continue;// If the property is already null just continue. As calling functions like GetDouble,GetBoolValue do not process CborReaderState.Null.
 
                     var fieldDeserializer = fieldDeserializers[fieldName];
                     Debug.WriteLine($"found property {fieldName} to deserialize");

@@ -42,9 +42,9 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         {
             // Arrange
             var reader = new CborReader(null);
-            var jsonParseNode = new CborParseNode(reader);
+            var cborParseNode = new CborParseNode(reader);
             // Act
-            var testEntity = jsonParseNode.GetObjectValue<TestEntity>(x => new TestEntity());
+            var testEntity = cborParseNode.GetObjectValue<TestEntity>(x => new TestEntity());
             // Assert
             Assert.NotNull(testEntity);
             Assert.Null(testEntity.OfficeLocation);
@@ -67,9 +67,9 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
             // Arrange
             var bytes = new ReadOnlyMemory<byte>(System.Text.UTF8Encoding.UTF8.GetBytes(TestUserCollectionString));
             var reader = new CborReader(bytes);
-            var jsonParseNode = new CborParseNode(reader);
+            var cborParseNode = new CborParseNode(reader);
             // Act
-            var testEntityCollection = jsonParseNode.GetCollectionOfObjectValues<TestEntity>(x => new TestEntity()).ToArray();
+            var testEntityCollection = cborParseNode.GetCollectionOfObjectValues<TestEntity>(x => new TestEntity()).ToArray();
             // Assert
             Assert.NotEmpty(testEntityCollection);
             Assert.Equal("48d31887-5fad-4d73-a9f5-3c356e68a038", testEntityCollection[0].Id);

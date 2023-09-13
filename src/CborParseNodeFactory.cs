@@ -15,16 +15,16 @@ namespace Microsoft.Kiota.Serialization.Cbor
     public class CborParseNodeFactory : IParseNodeFactory
     {
         /// <summary>
-        /// The valid content type for json
+        /// The valid content type for cbor
         /// </summary>
         public string ValidContentType { get; } = "application/cbor";
 
         /// <summary>
-        /// Gets the root <see cref="IParseNode"/> of the json to be read.
+        /// Gets the root <see cref="IParseNode"/> of the cbor to be read.
         /// </summary>
         /// <param name="contentType">The content type of the stream to be parsed</param>
-        /// <param name="content">The <see cref="Stream"/> containing json to parse.</param>
-        /// <returns>An instance of <see cref="IParseNode"/> for json manipulation</returns>
+        /// <param name="content">The <see cref="Stream"/> containing cbor to parse.</param>
+        /// <returns>An instance of <see cref="IParseNode"/> for cbor manipulation</returns>
         public IParseNode GetRootParseNode(string contentType, Stream content)
         {
             if(string.IsNullOrEmpty(contentType))

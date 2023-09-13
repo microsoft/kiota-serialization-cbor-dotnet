@@ -17,14 +17,14 @@ using System.Xml;
 namespace Microsoft.Kiota.Serialization.Cbor
 {
     /// <summary>
-    /// The <see cref="ISerializationWriter"/> implementation for json content types.
+    /// The <see cref="ISerializationWriter"/> implementation for cbor content types.
     /// </summary>
     public class CborSerializationWriter : ISerializationWriter, IDisposable
     {
         private readonly MemoryStream _stream = new MemoryStream();
 
         /// <summary>
-        /// The <see cref="CborWriter"/> instance for writing json content
+        /// The <see cref="CborWriter"/> instance for writing cbor content
         /// </summary>
         public readonly CborWriter writer;
 
@@ -63,7 +63,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the string value
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="value">The string value</param>
         public void WriteStringValue(string? key, string? value)
         {
@@ -77,7 +77,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the boolean value
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="value">The boolean value</param>
         public void WriteBoolValue(string? key, bool? value)
         {
@@ -88,7 +88,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the byte value
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="value">The byte value</param>
         public void WriteByteValue(string? key, byte? value)
         {
@@ -99,7 +99,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the sbyte value
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="value">The sbyte value</param>
         public void WriteSbyteValue(string? key, sbyte? value)
         {
@@ -110,7 +110,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the int value
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="value">The int value</param>
         public void WriteIntValue(string? key, int? value)
         {
@@ -121,7 +121,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the float value
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="value">The float value</param>
         public void WriteFloatValue(string? key, float? value)
         {
@@ -132,7 +132,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the long value
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="value">The long value</param>
         public void WriteLongValue(string? key, long? value)
         {
@@ -143,7 +143,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the double value
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="value">The double value</param>
         public void WriteDoubleValue(string? key, double? value)
         {
@@ -154,7 +154,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the decimal value
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="value">The decimal value</param>
         public void WriteDecimalValue(string? key, decimal? value)
         {
@@ -165,7 +165,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the Guid value
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="value">The Guid value</param>
         public void WriteGuidValue(string? key, Guid? value)
         {
@@ -176,7 +176,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the DateTimeOffset value
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="value">The DateTimeOffset value</param>
         public void WriteDateTimeOffsetValue(string? key, DateTimeOffset? value)
         {
@@ -187,7 +187,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the TimeSpan(An ISO8601 duration.For example, PT1M is "period time of 1 minute") value.
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="value">The TimeSpan value</param>
         public void WriteTimeSpanValue(string? key, TimeSpan? value)
         {
@@ -198,7 +198,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the Date value
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="value">The Date value</param>
         public void WriteDateValue(string? key, Date? value)
         {
@@ -209,7 +209,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the Time value
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="value">The Time value</param>
         public void WriteTimeValue(string? key, Time? value)
         {
@@ -220,7 +220,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the null value
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         public void WriteNullValue(string? key)
         {
             if(!string.IsNullOrEmpty(key)) writer.WriteTextString(key!);
@@ -230,7 +230,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the enumeration value of type  <typeparam name="T"/>
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="value">The enumeration value</param>
         public void WriteEnumValue<T>(string? key, T? value) where T : struct, Enum
         {
@@ -250,7 +250,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the collection of primitives of type  <typeparam name="T"/>
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="values">The primitive collection</param>
         public void WriteCollectionOfPrimitiveValues<T>(string? key, IEnumerable<T>? values)
         {
@@ -267,7 +267,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the collection of objects of type  <typeparam name="T"/>
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="values">The object collection</param>
         public void WriteCollectionOfObjectValues<T>(string? key, IEnumerable<T>? values) where T : IParsable
         {
@@ -310,7 +310,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <summary>
         /// Write the object of type <typeparam name="T"/>
         /// </summary>
-        /// <param name="key">The key of the json node</param>
+        /// <param name="key">The key of the cbor node</param>
         /// <param name="value">The object instance to write</param>
         /// <param name="additionalValuesToMerge">The additional values to merge to the main value when serializing an intersection wrapper.</param>
         public void WriteObjectValue<T>(string? key, T? value, params IParsable?[] additionalValuesToMerge) where T : IParsable
