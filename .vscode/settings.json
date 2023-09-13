@@ -1,5 +1,8 @@
 {
-  "cSpell.words": ["cbor"],
+  "cSpell.words": [
+    "cbor",
+    "Deserializers"
+  ],
   "editor.formatOnSave": true,
   "dotnet.defaultSolution": "Microsoft.Kiota.Serialization.Cbor.sln"
 }
