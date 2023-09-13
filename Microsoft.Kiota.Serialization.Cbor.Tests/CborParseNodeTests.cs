@@ -29,7 +29,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
             var reader = new CborReader(data);
             var cborParseNode = new CborParseNode(reader);
             // Act
-            var testEntity = cborParseNode.GetObjectValue<TestEntity>(x => new TestEntity());
+            var testEntity = cborParseNode.GetObjectValue(static x => new TestEntity());
             // Assert
             Assert.NotNull(testEntity);
             Assert.Null(testEntity.OfficeLocation);
