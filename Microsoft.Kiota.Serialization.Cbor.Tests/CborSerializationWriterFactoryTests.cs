@@ -16,7 +16,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         public void GetsWriterForCborContentType()
         {
             var cborWriter = _cborSerializationFactory.GetSerializationWriter(_cborSerializationFactory.ValidContentType);
-            
+
             // Assert
             Assert.NotNull(cborWriter);
             Assert.IsAssignableFrom<CborSerializationWriter>(cborWriter);

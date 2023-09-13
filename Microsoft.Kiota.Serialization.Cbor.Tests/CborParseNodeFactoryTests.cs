@@ -19,7 +19,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         public void GetsWriterForCborContentType()
         {
             using var cborStream = new MemoryStream(Encoding.UTF8.GetBytes(TestCborString));
-            var cborWriter = _cborParseNodeFactory.GetRootParseNode(_cborParseNodeFactory.ValidContentType,cborStream);
+            var cborWriter = _cborParseNodeFactory.GetRootParseNode(_cborParseNodeFactory.ValidContentType, cborStream);
 
             // Assert
             Assert.NotNull(cborWriter);
@@ -31,7 +31,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         {
             var streamContentType = "application/octet-stream";
             using var cborStream = new MemoryStream(Encoding.UTF8.GetBytes(TestCborString));
-            var exception = Assert.Throws<ArgumentOutOfRangeException>(() => _cborParseNodeFactory.GetRootParseNode(streamContentType,cborStream));
+            var exception = Assert.Throws<ArgumentOutOfRangeException>(() => _cborParseNodeFactory.GetRootParseNode(streamContentType, cborStream));
 
             // Assert
             Assert.NotNull(exception);
@@ -44,7 +44,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         public void ThrowsArgumentNullExceptionForNoContentType(string contentType)
         {
             using var cborStream = new MemoryStream(Encoding.UTF8.GetBytes(TestCborString));
-            var exception = Assert.Throws<ArgumentNullException>(() => _cborParseNodeFactory.GetRootParseNode(contentType,cborStream));
+            var exception = Assert.Throws<ArgumentNullException>(() => _cborParseNodeFactory.GetRootParseNode(contentType, cborStream));
 
             // Assert
             Assert.NotNull(exception);

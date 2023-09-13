@@ -6,7 +6,8 @@ using Xunit;
 
 namespace Microsoft.Kiota.Serialization.Cbor.Tests;
 
-public class IntersectionWrapperParseTests {
+public class IntersectionWrapperParseTests
+{
     private readonly CborParseNodeFactory _parseNodeFactory = new();
     private readonly CborSerializationWriterFactory _serializationWriterFactory = new();
     private const string contentType = "application/cbor";
@@ -16,10 +17,10 @@ public class IntersectionWrapperParseTests {
         // Given
         using var payload = new MemoryStream(Encoding.UTF8.GetBytes("{\"displayName\":\"McGill\",\"officeLocation\":\"Montreal\", \"id\": \"opaque\"}"));
         var parseNode = _parseNodeFactory.GetRootParseNode(contentType, payload);
-    
+
         // When
         var result = parseNode.GetObjectValue<IntersectionTypeMock>(IntersectionTypeMock.CreateFromDiscriminator);
-    
+
         // Then
         Assert.NotNull(result);
         Assert.NotNull(result.ComposedType1);
@@ -35,10 +36,10 @@ public class IntersectionWrapperParseTests {
         // Given
         using var payload = new MemoryStream(Encoding.UTF8.GetBytes("{\"displayName\":\"McGill\",\"officeLocation\":\"Montreal\", \"id\": 10}"));
         var parseNode = _parseNodeFactory.GetRootParseNode(contentType, payload);
-    
+
         // When
         var result = parseNode.GetObjectValue<IntersectionTypeMock>(IntersectionTypeMock.CreateFromDiscriminator);
-    
+
         // Then
         Assert.NotNull(result);
         Assert.NotNull(result.ComposedType1);
@@ -55,10 +56,10 @@ public class IntersectionWrapperParseTests {
         // Given
         using var payload = new MemoryStream(Encoding.UTF8.GetBytes("[{\"@odata.type\":\"#microsoft.graph.TestEntity\",\"officeLocation\":\"Ottawa\", \"id\": \"11\"}, {\"@odata.type\":\"#microsoft.graph.TestEntity\",\"officeLocation\":\"Montreal\", \"id\": \"10\"}]"));
         var parseNode = _parseNodeFactory.GetRootParseNode(contentType, payload);
-    
+
         // When
         var result = parseNode.GetObjectValue<IntersectionTypeMock>(IntersectionTypeMock.CreateFromDiscriminator);
-    
+
         // Then
         Assert.NotNull(result);
         Assert.Null(result.ComposedType1);
@@ -74,10 +75,10 @@ public class IntersectionWrapperParseTests {
         // Given
         using var payload = new MemoryStream(Encoding.UTF8.GetBytes("\"officeLocation\""));
         var parseNode = _parseNodeFactory.GetRootParseNode(contentType, payload);
-    
+
         // When
         var result = parseNode.GetObjectValue<IntersectionTypeMock>(IntersectionTypeMock.CreateFromDiscriminator);
-    
+
         // Then
         Assert.NotNull(result);
         Assert.Null(result.ComposedType2);
@@ -90,16 +91,17 @@ public class IntersectionWrapperParseTests {
     {
         // Given
         using var writer = _serializationWriterFactory.GetSerializationWriter(contentType);
-        var model = new IntersectionTypeMock {
+        var model = new IntersectionTypeMock
+        {
             StringValue = "officeLocation"
         };
-    
+
         // When
         model.Serialize(writer);
         using var resultStream = writer.GetSerializedContent();
         using var streamReader = new StreamReader(resultStream);
         var result = streamReader.ReadToEnd();
-    
+
         // Then
         Assert.Equal("\"officeLocation\"", result);
     }
@@ -108,22 +110,25 @@ public class IntersectionWrapperParseTests {
     {
         // Given
         using var writer = _serializationWriterFactory.GetSerializationWriter(contentType);
-        var model = new IntersectionTypeMock {
-            ComposedType1 = new() {
+        var model = new IntersectionTypeMock
+        {
+            ComposedType1 = new()
+            {
                 Id = "opaque",
                 OfficeLocation = "Montreal",
             },
-            ComposedType2 = new() {
+            ComposedType2 = new()
+            {
                 DisplayName = "McGill",
             },
         };
-    
+
         // When
         model.Serialize(writer);
         using var resultStream = writer.GetSerializedContent();
         using var streamReader = new StreamReader(resultStream);
         var result = streamReader.ReadToEnd();
-    
+
         // Then
         Assert.Equal("{\"id\":\"opaque\",\"officeLocation\":\"Montreal\",\"displayName\":\"McGill\"}", result);
     }
@@ -132,19 +137,21 @@ public class IntersectionWrapperParseTests {
     {
         // Given
         using var writer = _serializationWriterFactory.GetSerializationWriter(contentType);
-        var model = new IntersectionTypeMock {
-            ComposedType2 = new() {
+        var model = new IntersectionTypeMock
+        {
+            ComposedType2 = new()
+            {
                 DisplayName = "McGill",
                 Id = 10,
             },
         };
-    
+
         // When
         model.Serialize(writer);
         using var resultStream = writer.GetSerializedContent();
         using var streamReader = new StreamReader(resultStream);
         var result = streamReader.ReadToEnd();
-    
+
         // Then
         Assert.Equal("{\"displayName\":\"McGill\",\"id\":10}", result);
     }
@@ -154,7 +161,8 @@ public class IntersectionWrapperParseTests {
     {
         // Given
         using var writer = _serializationWriterFactory.GetSerializationWriter(contentType);
-        var model = new IntersectionTypeMock {
+        var model = new IntersectionTypeMock
+        {
             ComposedType3 = new() {
                 new() {
                     OfficeLocation = "Montreal",
@@ -166,13 +174,13 @@ public class IntersectionWrapperParseTests {
                 }
             },
         };
-    
+
         // When
         model.Serialize(writer);
         using var resultStream = writer.GetSerializedContent();
         using var streamReader = new StreamReader(resultStream);
         var result = streamReader.ReadToEnd();
-    
+
         // Then
         Assert.Equal("[{\"id\":\"10\",\"officeLocation\":\"Montreal\"},{\"id\":\"11\",\"officeLocation\":\"Ottawa\"}]", result);
     }

@@ -3,16 +3,16 @@
 // ------------------------------------------------------------------------------
 
 using System;
-using System.Linq;
-using System.IO;
-using System.Formats.Cbor;
-using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
+using System.Formats.Cbor;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
-using Microsoft.Kiota.Abstractions.Extensions;
-using Microsoft.Kiota.Abstractions;
 using System.Xml;
+using Microsoft.Kiota.Abstractions;
+using Microsoft.Kiota.Abstractions.Extensions;
+using Microsoft.Kiota.Abstractions.Serialization;
 
 namespace Microsoft.Kiota.Serialization.Cbor
 {
@@ -55,7 +55,8 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// Get the stream of the serialized content
         /// </summary>
         /// <returns>The <see cref="Stream"/> of the serialized content</returns>
-        public Stream GetSerializedContent() {
+        public Stream GetSerializedContent()
+        {
             var stream = new MemoryStream(writer.Encode());
             return stream;
         }
@@ -243,7 +244,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
                                             .Where(x => value.Value.HasFlag(x))
                                             .Select(GetEnumName)
                                             .Aggregate((x, y) => $"{x},{y}") ?? "");
-                else writer.WriteTextString(GetEnumName(value.Value)?? "");
+                else writer.WriteTextString(GetEnumName(value.Value) ?? "");
             }
         }
 
@@ -321,9 +322,10 @@ namespace Microsoft.Kiota.Serialization.Cbor
                 if(!string.IsNullOrEmpty(key)) writer.WriteTextString(key!);
                 if(value != null) OnBeforeObjectSerialization?.Invoke(value);
                 var serializingScalarValue = value is IComposedTypeWrapper;
-                if (!serializingScalarValue)
+                if(!serializingScalarValue)
                     writer.WriteStartMap(null);
-                if(value != null) {
+                if(value != null)
+                {
                     OnStartObjectSerialization?.Invoke(value, this);
                     value.Serialize(this);
                 }
@@ -334,7 +336,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
                     additionalValueToMerge!.Serialize(this);
                     OnAfterObjectSerialization?.Invoke(additionalValueToMerge);
                 }
-                if (!serializingScalarValue)
+                if(!serializingScalarValue)
                     writer.WriteEndMap();
                 if(value != null) OnAfterObjectSerialization?.Invoke(value);
             }
@@ -436,17 +438,17 @@ namespace Microsoft.Kiota.Serialization.Cbor
             //writer.Dispose();
             GC.SuppressFinalize(this);
         }
-        
+
         private string? GetEnumName<T>(T value) where T : struct, Enum
         {
             var type = typeof(T);
 
-            if (Enum.GetName(type, value) is not { } name)
+            if(Enum.GetName(type, value) is not { } name)
                 throw new ArgumentException($"Invalid Enum value {value} for enum of type {type}");
-            
-            if (type.GetMember(name).FirstOrDefault()?.GetCustomAttribute<EnumMemberAttribute>() is { } attribute)
+
+            if(type.GetMember(name).FirstOrDefault()?.GetCustomAttribute<EnumMemberAttribute>() is { } attribute)
                 return attribute.Value;
-            
+
             return name.ToFirstCharacterLowerCase();
         }
     }

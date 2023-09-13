@@ -6,7 +6,8 @@ using Xunit;
 
 namespace Microsoft.Kiota.Serialization.Cbor.Tests;
 
-public class UnionWrapperParseTests {
+public class UnionWrapperParseTests
+{
     private readonly CborParseNodeFactory _parseNodeFactory = new();
     private readonly CborSerializationWriterFactory _serializationWriterFactory = new();
     private const string contentType = "application/cbor";
@@ -16,10 +17,10 @@ public class UnionWrapperParseTests {
         // Given
         using var payload = new MemoryStream(Encoding.UTF8.GetBytes("{\"@odata.type\":\"#microsoft.graph.testEntity\",\"officeLocation\":\"Montreal\", \"id\": \"opaque\"}"));
         var parseNode = _parseNodeFactory.GetRootParseNode(contentType, payload);
-    
+
         // When
         var result = parseNode.GetObjectValue<UnionTypeMock>(UnionTypeMock.CreateFromDiscriminator);
-    
+
         // Then
         Assert.NotNull(result);
         Assert.NotNull(result.ComposedType1);
@@ -34,10 +35,10 @@ public class UnionWrapperParseTests {
         // Given
         using var payload = new MemoryStream(Encoding.UTF8.GetBytes("{\"@odata.type\":\"#microsoft.graph.secondTestEntity\",\"officeLocation\":\"Montreal\", \"id\": 10}"));
         var parseNode = _parseNodeFactory.GetRootParseNode(contentType, payload);
-    
+
         // When
         var result = parseNode.GetObjectValue<UnionTypeMock>(UnionTypeMock.CreateFromDiscriminator);
-    
+
         // Then
         Assert.NotNull(result);
         Assert.NotNull(result.ComposedType2);
@@ -52,10 +53,10 @@ public class UnionWrapperParseTests {
         // Given
         using var payload = new MemoryStream(Encoding.UTF8.GetBytes("[{\"@odata.type\":\"#microsoft.graph.TestEntity\",\"officeLocation\":\"Ottawa\", \"id\": \"11\"}, {\"@odata.type\":\"#microsoft.graph.TestEntity\",\"officeLocation\":\"Montreal\", \"id\": \"10\"}]"));
         var parseNode = _parseNodeFactory.GetRootParseNode(contentType, payload);
-    
+
         // When
         var result = parseNode.GetObjectValue<UnionTypeMock>(UnionTypeMock.CreateFromDiscriminator);
-    
+
         // Then
         Assert.NotNull(result);
         Assert.NotNull(result.ComposedType3);
@@ -71,10 +72,10 @@ public class UnionWrapperParseTests {
         // Given
         using var payload = new MemoryStream(Encoding.UTF8.GetBytes("\"officeLocation\""));
         var parseNode = _parseNodeFactory.GetRootParseNode(contentType, payload);
-    
+
         // When
         var result = parseNode.GetObjectValue<UnionTypeMock>(UnionTypeMock.CreateFromDiscriminator);
-    
+
         // Then
         Assert.NotNull(result);
         Assert.Null(result.ComposedType2);
@@ -86,16 +87,17 @@ public class UnionWrapperParseTests {
     {
         // Given
         using var writer = _serializationWriterFactory.GetSerializationWriter(contentType);
-        var model = new UnionTypeMock {
+        var model = new UnionTypeMock
+        {
             StringValue = "officeLocation"
         };
-    
+
         // When
         writer.WriteObjectValue(string.Empty, model);
         using var resultStream = writer.GetSerializedContent();
         using var streamReader = new StreamReader(resultStream);
         var result = streamReader.ReadToEnd();
-    
+
         // Then
         Assert.Equal("\"officeLocation\"", result);
     }
@@ -104,22 +106,25 @@ public class UnionWrapperParseTests {
     {
         // Given
         using var writer = _serializationWriterFactory.GetSerializationWriter(contentType);
-        var model = new UnionTypeMock {
-            ComposedType1 = new() {
+        var model = new UnionTypeMock
+        {
+            ComposedType1 = new()
+            {
                 Id = "opaque",
                 OfficeLocation = "Montreal",
             },
-            ComposedType2 = new() {
+            ComposedType2 = new()
+            {
                 DisplayName = "McGill",
             },
         };
-    
+
         // When
         writer.WriteObjectValue(string.Empty, model);
         using var resultStream = writer.GetSerializedContent();
         using var streamReader = new StreamReader(resultStream);
         var result = streamReader.ReadToEnd();
-    
+
         // Then
         Assert.Equal("{\"id\":\"opaque\",\"officeLocation\":\"Montreal\"}", result);
     }
@@ -128,19 +133,21 @@ public class UnionWrapperParseTests {
     {
         // Given
         using var writer = _serializationWriterFactory.GetSerializationWriter(contentType);
-        var model = new UnionTypeMock {
-            ComposedType2 = new() {
+        var model = new UnionTypeMock
+        {
+            ComposedType2 = new()
+            {
                 DisplayName = "McGill",
                 Id = 10,
             },
         };
-    
+
         // When
         writer.WriteObjectValue(string.Empty, model);
         using var resultStream = writer.GetSerializedContent();
         using var streamReader = new StreamReader(resultStream);
         var result = streamReader.ReadToEnd();
-    
+
         // Then
         Assert.Equal("{\"displayName\":\"McGill\",\"id\":10}", result);
     }
@@ -150,7 +157,8 @@ public class UnionWrapperParseTests {
     {
         // Given
         using var writer = _serializationWriterFactory.GetSerializationWriter(contentType);
-        var model = new UnionTypeMock {
+        var model = new UnionTypeMock
+        {
             ComposedType3 = new() {
                 new() {
                     OfficeLocation = "Montreal",
@@ -162,13 +170,13 @@ public class UnionWrapperParseTests {
                 }
             },
         };
-    
+
         // When
         writer.WriteObjectValue(string.Empty, model);
         using var resultStream = writer.GetSerializedContent();
         using var streamReader = new StreamReader(resultStream);
         var result = streamReader.ReadToEnd();
-    
+
         // Then
         Assert.Equal("[{\"id\":\"10\",\"officeLocation\":\"Montreal\"},{\"id\":\"11\",\"officeLocation\":\"Ottawa\"}]", result);
     }

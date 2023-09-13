@@ -3,17 +3,17 @@
 // ------------------------------------------------------------------------------
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Formats.Cbor;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
-using Microsoft.Kiota.Abstractions.Serialization;
-using Microsoft.Kiota.Abstractions;
 using System.Xml;
-using Microsoft.Kiota.Abstractions.Extensions;
-using System.Formats.Cbor;
 using System.Xml.Linq;
+using Microsoft.Kiota.Abstractions;
+using Microsoft.Kiota.Abstractions.Extensions;
+using Microsoft.Kiota.Abstractions.Serialization;
 
 namespace Microsoft.Kiota.Serialization.Cbor
 {
@@ -95,9 +95,10 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// Get the <see cref="DateTimeOffset"/> value from the cbor node
         /// </summary>
         /// <returns>A <see cref="DateTimeOffset"/> value</returns>
-        public DateTimeOffset? GetDateTimeOffsetValue() {
-                return reader.ReadDateTimeOffset();
-            }
+        public DateTimeOffset? GetDateTimeOffsetValue()
+        {
+            return reader.ReadDateTimeOffset();
+        }
 
         /// <summary>
         /// Get the <see cref="TimeSpan"/> value from the cbor node
@@ -142,7 +143,8 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <returns>A collection of objects</returns>
         public IEnumerable<T> GetCollectionOfObjectValues<T>(ParsableFactory<T> factory) where T : IParsable
         {
-            if (reader.PeekState() == CborReaderState.StartArray) {
+            if(reader.PeekState() == CborReaderState.StartArray)
+            {
                 while(reader.PeekState() != CborReaderState.EndArray)
                 {
                     yield return GetObjectValue<T>(factory);
@@ -155,21 +157,23 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <returns>The collection of enum values.</returns>
         public IEnumerable<T?> GetCollectionOfEnumValues<T>() where T : struct, Enum
         {
-                if (reader.PeekState() == CborReaderState.StartArray) {
+            if(reader.PeekState() == CborReaderState.StartArray)
+            {
                 while(reader.PeekState() != CborReaderState.EndArray)
                 {
-                     yield return GetEnumValue<T>();
+                    yield return GetEnumValue<T>();
                 }
             }
         }
-        
+
         /// <summary>
         /// Gets the byte array value of the node.
         /// </summary>
         /// <returns>The byte array value of the node.</returns>
-        public byte[]? GetByteArrayValue() {
+        public byte[]? GetByteArrayValue()
+        {
             throw new NotImplementedException();
-            
+
             // var rawValue = _jsonNode.GetString();
             // if(string.IsNullOrEmpty(rawValue)) return null;
             // return Convert.FromBase64String(rawValue);
@@ -195,7 +199,8 @@ namespace Microsoft.Kiota.Serialization.Cbor
         public IEnumerable<T> GetCollectionOfPrimitiveValues<T>()
         {
 
-            if (reader.PeekState() == CborReaderState.StartArray) {
+            if(reader.PeekState() == CborReaderState.StartArray)
+            {
                 var genericType = typeof(T);
                 while(reader.PeekState() != CborReaderState.EndArray)
                 {
@@ -258,7 +263,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         private void AssignFieldValues<T>(T item) where T : IParsable
         {
 
-            if (reader.PeekState() != CborReaderState.StartMap) return;
+            if(reader.PeekState() != CborReaderState.StartMap) return;
             IDictionary<string, object>? itemAdditionalData = null;
             if(item is IAdditionalDataHolder holder)
             {
@@ -267,9 +272,10 @@ namespace Microsoft.Kiota.Serialization.Cbor
             }
             //When targeting maccatalyst, new keyword for hiding an existing member is not being respected, returning only id and odata type
             //the below line fixes the issue
-            var fieldDeserializers = (IDictionary<string, Action<IParseNode>>) item.GetType().GetMethod("GetFieldDeserializers").Invoke(item, null);  
+            var fieldDeserializers = (IDictionary<string, Action<IParseNode>>)item.GetType().GetMethod("GetFieldDeserializers").Invoke(item, null);
 
-            while(reader.PeekState() != CborReaderState.EndMap) {
+            while(reader.PeekState() != CborReaderState.EndMap)
+            {
                 var fieldName = reader.ReadTextString();
                 if(fieldDeserializers.ContainsKey(fieldName))
                 {
@@ -280,7 +286,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
                     Debug.WriteLine($"found property {fieldName} to deserialize");
                     fieldDeserializer.Invoke(this);
                 }
-                else if (itemAdditionalData != null)
+                else if(itemAdditionalData != null)
                 {
                     Debug.WriteLine($"found additional property {fieldName} to deserialize");
                     IDictionaryExtensions.TryAdd(itemAdditionalData, fieldName, TryGetAnything()!);
@@ -348,10 +354,10 @@ namespace Microsoft.Kiota.Serialization.Cbor
 
             // return default;
         }
-        
+
         private string ToEnumRawName<T>(Type type, string value) where T : struct, Enum
         {
-            if (type.GetMembers().FirstOrDefault(member =>
+            if(type.GetMembers().FirstOrDefault(member =>
                    member.GetCustomAttribute<EnumMemberAttribute>() is { } attr &&
                    value.Equals(attr.Value, StringComparison.Ordinal))?.Name is { } strValue)
                 return strValue;

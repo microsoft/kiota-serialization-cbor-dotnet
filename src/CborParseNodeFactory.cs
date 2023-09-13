@@ -34,7 +34,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
 
             _ = content ?? throw new ArgumentNullException(nameof(content));
 
-            if (content is not MemoryStream ms)
+            if(content is not MemoryStream ms)
             {
                 ms = new MemoryStream();
                 content.CopyTo(ms);
