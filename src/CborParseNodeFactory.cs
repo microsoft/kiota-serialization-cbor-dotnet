@@ -3,7 +3,7 @@
 // ------------------------------------------------------------------------------
 
 using System;
-using System.Data.SqlTypes;
+using System.Formats.Cbor;
 using System.IO;
 using Microsoft.Kiota.Abstractions.Serialization;
 
@@ -39,8 +39,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
                 ms = new MemoryStream();
                 content.CopyTo(ms);
             }
-            var bytes = new ReadOnlyMemory<byte>(ms.ToArray());
-            return new CborParseNode(new System.Formats.Cbor.CborReader(bytes));
+            return new CborParseNode(new CborReader(ms.ToArray()));
         }
     }
 }
