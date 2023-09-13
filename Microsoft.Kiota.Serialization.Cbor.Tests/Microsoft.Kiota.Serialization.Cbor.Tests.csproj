@@ -29,5 +29,8 @@
   <ItemGroup>
     <ProjectReference Include="..\src\Microsoft.Kiota.Serialization.Cbor.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="TestData\*.hex" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
 </Project>

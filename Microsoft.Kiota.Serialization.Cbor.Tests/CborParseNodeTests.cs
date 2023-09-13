@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Formats.Cbor;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Serialization.Cbor.Tests.Mocks;
 using Xunit;
@@ -9,39 +11,22 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
 {
     public class CborParseNodeTests
     {
-        private const string TestUserCbor = "{\r\n" +
-                                            "    \"@odata.context\": \"https://graph.microsoft.com/v1.0/$metadata#users/$entity\",\r\n" +
-                                            "    \"@odata.id\": \"https://graph.microsoft.com/v2/dcd219dd-bc68-4b9b-bf0b-4a33a796be35/directoryObjects/48d31887-5fad-4d73-a9f5-3c356e68a038/Microsoft.DirectoryServices.User\",\r\n" +
-                                            "    \"businessPhones\": [\r\n" +
-                                            "        \"+1 412 555 0109\"\r\n" +
-                                            "    ],\r\n" +
-                                            "    \"displayName\": \"Megan Bowen\",\r\n" +
-                                            "    \"numbers\":\"one,two,thirtytwo\"," +
-                                            "    \"testNamingEnum\":\"Item2:SubItem1\"," +
-                                            "    \"givenName\": \"Megan\",\r\n" +
-                                            "    \"accountEnabled\": true,\r\n" +
-                                            "    \"createdDateTime\": \"2017 -07-29T03:07:25Z\",\r\n" +
-                                            "    \"jobTitle\": \"Auditor\",\r\n" +
-                                            "    \"mail\": \"MeganB@M365x214355.onmicrosoft.com\",\r\n" +
-                                            "    \"mobilePhone\": null,\r\n" +
-                                            "    \"officeLocation\": null,\r\n" +
-                                            "    \"preferredLanguage\": \"en-US\",\r\n" +
-                                            "    \"surname\": \"Bowen\",\r\n" +
-                                            "    \"workDuration\": \"PT1H\",\r\n" +
-                                            "    \"startWorkTime\": \"08:00:00.0000000\",\r\n" +
-                                            "    \"endWorkTime\": \"17:00:00.0000000\",\r\n" +
-                                            "    \"userPrincipalName\": \"MeganB@M365x214355.onmicrosoft.com\",\r\n" +
-                                            "    \"birthDay\": \"2017-09-04\",\r\n" +
-                                            "    \"id\": \"48d31887-5fad-4d73-a9f5-3c356e68a038\"\r\n" +
-                                            "}";
-
-        private static readonly string TestUserCollectionString = $"[{TestUserCbor}]";
-
+        private static byte[] GetCBorData(string fileName)
+        {
+            var stringHexValue = File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetAssembly(typeof(CborParseNodeTests)).Location), "TestData", fileName)); //async method not available for net462
+            var result = new byte[stringHexValue.Length / 2];
+            for(var i = 0; i < stringHexValue.Length; i += 2)
+            {
+                result[i / 2] = Convert.ToByte(stringHexValue.Substring(i, 2), 16);
+            }
+            return result;
+        }
         [Fact]
         public void GetsEntityValueFromCbor()
         {
             // Arrange
-            var reader = new CborReader(null);
+            var data = GetCBorData("TestUserCbor.hex");
+            var reader = new CborReader(data);
             var cborParseNode = new CborParseNode(reader);
             // Act
             var testEntity = cborParseNode.GetObjectValue<TestEntity>(x => new TestEntity());
@@ -65,11 +50,11 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         public void GetCollectionOfObjectValuesFromCbor()
         {
             // Arrange
-            var bytes = new ReadOnlyMemory<byte>(System.Text.UTF8Encoding.UTF8.GetBytes(TestUserCollectionString));
-            var reader = new CborReader(bytes);
+            var data = GetCBorData("TestUserCollectionCbor.hex");
+            var reader = new CborReader(data);
             var cborParseNode = new CborParseNode(reader);
             // Act
-            var testEntityCollection = cborParseNode.GetCollectionOfObjectValues<TestEntity>(x => new TestEntity()).ToArray();
+            var testEntityCollection = cborParseNode.GetCollectionOfObjectValues(static x => new TestEntity()).ToArray();
             // Assert
             Assert.NotEmpty(testEntityCollection);
             Assert.Equal("48d31887-5fad-4d73-a9f5-3c356e68a038", testEntityCollection[0].Id);
@@ -79,8 +64,8 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         public void GetsChildNodeAndGetCollectionOfPrimitiveValuesFromCborParseNode()
         {
             // Arrange
-            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(TestUserCbor);
-            var reader = new CborReader(bytes);
+            var data = GetCBorData("TestUserCollectionCbor.hex");
+            var reader = new CborReader(data);
             var rootParseNode = new CborParseNode(reader);
             // Act to get business phones list
             var phonesListChildNode = rootParseNode.GetChildNode("businessPhones");
@@ -94,8 +79,8 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         public void ReturnsDefaultIfChildNodeDoesNotExist()
         {
             // Arrange
-            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(TestUserCbor);
-            var reader = new CborReader(bytes);
+            var data = GetCBorData("TestUserCollectionCbor.hex");
+            var reader = new CborReader(data);
             var rootParseNode = new CborParseNode(reader);
             // Try to get an imaginary node value
             var imaginaryNode = rootParseNode.GetChildNode("imaginaryNode");
