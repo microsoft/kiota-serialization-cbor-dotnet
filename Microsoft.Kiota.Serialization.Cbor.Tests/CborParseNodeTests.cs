@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Formats.Cbor;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Serialization.Cbor.Tests.Mocks;
 using Xunit;
@@ -11,21 +9,12 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
 {
     public class CborParseNodeTests
     {
-        private static byte[] GetCBorData(string fileName)
-        {
-            var stringHexValue = File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetAssembly(typeof(CborParseNodeTests)).Location), "TestData", fileName)); //async method not available for net462
-            var result = new byte[stringHexValue.Length / 2];
-            for(var i = 0; i < stringHexValue.Length; i += 2)
-            {
-                result[i / 2] = Convert.ToByte(stringHexValue.Substring(i, 2), 16);
-            }
-            return result;
-        }
+
         [Fact]
         public void GetsEntityValueFromCbor()
         {
             // Arrange
-            var data = GetCBorData("TestUserCbor.hex");
+            var data = TestDataHelper.GetCBorData("TestUserCbor.hex");
             var reader = new CborReader(data);
             var cborParseNode = new CborParseNode(reader);
             // Act
@@ -50,7 +39,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         public void GetCollectionOfObjectValuesFromCbor()
         {
             // Arrange
-            var data = GetCBorData("TestUserCollectionCbor.hex");
+            var data = TestDataHelper.GetCBorData("TestUserCollectionCbor.hex");
             var reader = new CborReader(data);
             var cborParseNode = new CborParseNode(reader);
             // Act
@@ -64,7 +53,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         public void GetsChildNodeAndGetCollectionOfPrimitiveValuesFromCborParseNode()
         {
             // Arrange
-            var data = GetCBorData("TestUserCollectionCbor.hex");
+            var data = TestDataHelper.GetCBorData("TestUserCbor.hex");
             var reader = new CborReader(data);
             var rootParseNode = new CborParseNode(reader);
             // Act to get business phones list
@@ -79,7 +68,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         public void ReturnsDefaultIfChildNodeDoesNotExist()
         {
             // Arrange
-            var data = GetCBorData("TestUserCollectionCbor.hex");
+            var data = TestDataHelper.GetCBorData("TestUserCbor.hex");
             var reader = new CborReader(data);
             var rootParseNode = new CborParseNode(reader);
             // Try to get an imaginary node value

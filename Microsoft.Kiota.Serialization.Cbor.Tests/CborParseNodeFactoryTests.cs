@@ -1,24 +1,17 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 using Xunit;
 
 namespace Microsoft.Kiota.Serialization.Cbor.Tests
 {
     public class CborParseNodeFactoryTests
     {
-        private readonly CborParseNodeFactory _cborParseNodeFactory;
-        private const string TestCborString = "{\"key\":\"value\"}";
-
-        public CborParseNodeFactoryTests()
-        {
-            _cborParseNodeFactory = new CborParseNodeFactory();
-        }
-
+        private readonly CborParseNodeFactory _cborParseNodeFactory = new();
         [Fact]
         public void GetsWriterForCborContentType()
         {
-            using var cborStream = new MemoryStream(Encoding.UTF8.GetBytes(TestCborString));
+            var data = TestDataHelper.GetCBorData("TestUserCbor.hex");
+            using var cborStream = new MemoryStream(data);
             var cborWriter = _cborParseNodeFactory.GetRootParseNode(_cborParseNodeFactory.ValidContentType, cborStream);
 
             // Assert
@@ -30,7 +23,8 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         public void ThrowsArgumentOutOfRangeExceptionForInvalidContentType()
         {
             var streamContentType = "application/octet-stream";
-            using var cborStream = new MemoryStream(Encoding.UTF8.GetBytes(TestCborString));
+            var data = TestDataHelper.GetCBorData("TestUserCbor.hex");
+            using var cborStream = new MemoryStream(data);
             var exception = Assert.Throws<ArgumentOutOfRangeException>(() => _cborParseNodeFactory.GetRootParseNode(streamContentType, cborStream));
 
             // Assert
@@ -43,7 +37,8 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         [InlineData("")]
         public void ThrowsArgumentNullExceptionForNoContentType(string contentType)
         {
-            using var cborStream = new MemoryStream(Encoding.UTF8.GetBytes(TestCborString));
+            var data = TestDataHelper.GetCBorData("TestUserCbor.hex");
+            using var cborStream = new MemoryStream(data);
             var exception = Assert.Throws<ArgumentNullException>(() => _cborParseNodeFactory.GetRootParseNode(contentType, cborStream));
 
             // Assert

@@ -27,7 +27,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <param name="reader">The CborReader to initialize the node with</param>
         public CborParseNode(CborReader reader)
         {
-            value = (LoadCborTree(reader) as CborParseNode)?.value;
+            value = LoadCborTree(reader);
         }
         private CborParseNode(object? value)
         {
@@ -36,27 +36,27 @@ namespace Microsoft.Kiota.Serialization.Cbor
         readonly internal object? value;
         private object? LoadCborTree(CborReader rdr)
         {
-            switch (rdr.PeekState())
+            switch(rdr.PeekState())
             {
                 case CborReaderState.StartArray:
                     rdr.ReadStartArray();
-                    var array = new List<object?>();
-                    while (rdr.PeekState() != CborReaderState.EndArray)
+                    var result = new List<object?>();
+                    while(rdr.PeekState() != CborReaderState.EndArray)
                     {
-                        array.Add(LoadCborTree(rdr));
+                        result.Add(LoadCborTree(rdr));
                     }
                     rdr.ReadEndArray();
-                    return new CborParseNode(array);
+                    return result.ToArray();
                 case CborReaderState.StartMap:
                     rdr.ReadStartMap();
                     var map = new Dictionary<string, object?>();
-                    while (rdr.PeekState() != CborReaderState.EndMap)
+                    while(rdr.PeekState() != CborReaderState.EndMap)
                     {
                         var key = rdr.ReadTextString();
                         map.Add(key, LoadCborTree(rdr));
                     }
                     rdr.ReadEndMap();
-                    return new CborParseNode(map);
+                    return map;
                 case CborReaderState.Boolean:
                     return new CborParseNode(rdr.ReadBoolean());
                 case CborReaderState.DoublePrecisionFloat:
@@ -142,7 +142,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         public Guid? GetGuidValue()
         {
             var guidString = GetStringValue();
-            if (!Guid.TryParse(guidString, out var result))
+            if(!Guid.TryParse(guidString, out var result))
                 return null;
 
             return result;
@@ -161,7 +161,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         public TimeSpan? GetTimeSpanValue()
         {
             var jsonString = GetStringValue();
-            if (string.IsNullOrEmpty(jsonString))
+            if(string.IsNullOrEmpty(jsonString))
                 return null;
 
             // Parse an ISO8601 duration.http://en.wikipedia.org/wiki/ISO_8601#Durations to a TimeSpan
@@ -175,7 +175,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         public Date? GetDateValue()
         {
             var dateString = GetStringValue();
-            if (!DateTime.TryParse(dateString, out var result))
+            if(!DateTime.TryParse(dateString, out var result))
                 return null;
 
             return new Date(result);
@@ -188,7 +188,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         public Time? GetTimeValue()
         {
             var dateString = GetStringValue();
-            if (!DateTime.TryParse(dateString, out var result))
+            if(!DateTime.TryParse(dateString, out var result))
                 return null;
 
             return new Time(result);
@@ -201,11 +201,11 @@ namespace Microsoft.Kiota.Serialization.Cbor
         public T? GetEnumValue<T>() where T : struct, Enum
         {
             var rawValue = GetStringValue();
-            if (string.IsNullOrEmpty(rawValue)) return null;
+            if(string.IsNullOrEmpty(rawValue)) return null;
 
             var type = typeof(T);
             rawValue = ToEnumRawName<T>(type, rawValue!);
-            if (type.GetCustomAttributes<FlagsAttribute>().Any())
+            if(type.GetCustomAttributes<FlagsAttribute>().Any())
             {
                 return (T)(object)rawValue!
                     .Split(',')
@@ -225,15 +225,11 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <returns>A collection of objects</returns>
         public IEnumerable<T> GetCollectionOfObjectValues<T>(ParsableFactory<T> factory) where T : IParsable
         {
-            if (value is object?[] arrayValue)
+            if(value is object?[] arrayValue)
             {
-                foreach (var item in arrayValue)
-                {
-                    if (item is null) continue;
-                    if (item is CborParseNode itemNode)
-                        yield return itemNode.GetObjectValue(factory);
-                }
+                return arrayValue.OfType<Dictionary<string, object>>().Select(static x => new CborParseNode(x)).Select(x => x.GetObjectValue(factory));
             }
+            return Enumerable.Empty<T>();
         }
         /// <summary>
         /// Gets the collection of enum values of the node.
@@ -241,12 +237,12 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <returns>The collection of enum values.</returns>
         public IEnumerable<T?> GetCollectionOfEnumValues<T>() where T : struct, Enum
         {
-            if (value is object?[] arrayValue)
+            if(value is object?[] arrayValue)
             {
-                foreach (var item in arrayValue)
+                foreach(var item in arrayValue)
                 {
-                    if (item is null) continue;
-                    if (item is CborParseNode itemNode)
+                    if(item is null) continue;
+                    if(item is CborParseNode itemNode)
                         yield return itemNode.GetEnumValue<T>();
                 }
             }
@@ -259,7 +255,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         public byte[]? GetByteArrayValue()
         {
             var rawValue = GetStringValue();
-            if (string.IsNullOrEmpty(rawValue)) return null;
+            if(string.IsNullOrEmpty(rawValue)) return null;
             return Convert.FromBase64String(rawValue);
         }
         private static readonly Type booleanType = typeof(bool?);
@@ -282,38 +278,38 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <returns>A collection of objects</returns>
         public IEnumerable<T> GetCollectionOfPrimitiveValues<T>()
         {
-            if (value is object?[] arrayValue)
+            if(value is object?[] arrayValue)
             {
                 var genericType = typeof(T);
-                foreach (var rawItem in arrayValue)
+                foreach(var rawItem in arrayValue)
                 {
-                    if (rawItem is CborParseNode item)
+                    if(rawItem is CborParseNode item)
                     {
-                        if (genericType == booleanType)
+                        if(genericType == booleanType)
                             yield return (T)(object)item.GetBoolValue()!;
-                        else if (genericType == byteType)
+                        else if(genericType == byteType)
                             yield return (T)(object)item.GetByteValue()!;
-                        else if (genericType == sbyteType)
+                        else if(genericType == sbyteType)
                             yield return (T)(object)item.GetSbyteValue()!;
-                        else if (genericType == stringType)
+                        else if(genericType == stringType)
                             yield return (T)(object)item.GetStringValue()!;
-                        else if (genericType == intType)
+                        else if(genericType == intType)
                             yield return (T)(object)item.GetIntValue()!;
-                        else if (genericType == floatType)
+                        else if(genericType == floatType)
                             yield return (T)(object)item.GetFloatValue()!;
-                        else if (genericType == longType)
+                        else if(genericType == longType)
                             yield return (T)(object)item.GetLongValue()!;
-                        else if (genericType == doubleType)
+                        else if(genericType == doubleType)
                             yield return (T)(object)item.GetDoubleValue()!;
-                        else if (genericType == guidType)
+                        else if(genericType == guidType)
                             yield return (T)(object)item.GetGuidValue()!;
-                        else if (genericType == dateTimeOffsetType)
+                        else if(genericType == dateTimeOffsetType)
                             yield return (T)(object)item.GetDateTimeOffsetValue()!;
-                        else if (genericType == timeSpanType)
+                        else if(genericType == timeSpanType)
                             yield return (T)(object)item.GetTimeSpanValue()!;
-                        else if (genericType == dateType)
+                        else if(genericType == dateType)
                             yield return (T)(object)item.GetDateValue()!;
-                        else if (genericType == timeType)
+                        else if(genericType == timeType)
                             yield return (T)(object)item.GetTimeValue()!;
                         else
                             throw new InvalidOperationException($"unknown type for deserialization {genericType.FullName}");
@@ -321,31 +317,31 @@ namespace Microsoft.Kiota.Serialization.Cbor
                     }
                     else
                     {
-                        if (genericType == booleanType)
+                        if(genericType == booleanType)
                             yield return (T)(object)GetBoolValue()!;
-                        else if (genericType == byteType)
+                        else if(genericType == byteType)
                             yield return (T)(object)GetByteValue()!;
-                        else if (genericType == sbyteType)
+                        else if(genericType == sbyteType)
                             yield return (T)(object)GetSbyteValue()!;
-                        else if (genericType == stringType)
+                        else if(genericType == stringType)
                             yield return (T)(object)GetStringValue()!;
-                        else if (genericType == intType)
+                        else if(genericType == intType)
                             yield return (T)(object)GetIntValue()!;
-                        else if (genericType == floatType)
+                        else if(genericType == floatType)
                             yield return (T)(object)GetFloatValue()!;
-                        else if (genericType == longType)
+                        else if(genericType == longType)
                             yield return (T)(object)GetLongValue()!;
-                        else if (genericType == doubleType)
+                        else if(genericType == doubleType)
                             yield return (T)(object)GetDoubleValue()!;
-                        else if (genericType == guidType)
+                        else if(genericType == guidType)
                             yield return (T)(object)GetGuidValue()!;
-                        else if (genericType == dateTimeOffsetType)
+                        else if(genericType == dateTimeOffsetType)
                             yield return (T)(object)GetDateTimeOffsetValue()!;
-                        else if (genericType == timeSpanType)
+                        else if(genericType == timeSpanType)
                             yield return (T)(object)GetTimeSpanValue()!;
-                        else if (genericType == dateType)
+                        else if(genericType == dateType)
                             yield return (T)(object)GetDateValue()!;
-                        else if (genericType == timeType)
+                        else if(genericType == timeType)
                             yield return (T)(object)GetTimeValue()!;
                         else
                             throw new InvalidOperationException($"unknown type for deserialization {genericType.FullName}");
@@ -380,9 +376,9 @@ namespace Microsoft.Kiota.Serialization.Cbor
         private void AssignFieldValues<T>(T item) where T : IParsable
         {
 
-            if (value is not Dictionary<string, object?> dictionaryValue) return;
+            if(value is not Dictionary<string, object?> dictionaryValue) return;
             IDictionary<string, object>? itemAdditionalData = null;
-            if (item is IAdditionalDataHolder holder)
+            if(item is IAdditionalDataHolder holder)
             {
                 holder.AdditionalData ??= new Dictionary<string, object>();
                 itemAdditionalData = holder.AdditionalData;
@@ -391,18 +387,18 @@ namespace Microsoft.Kiota.Serialization.Cbor
             //the below line fixes the issue
             var fieldDeserializers = (IDictionary<string, Action<IParseNode>>)item.GetType().GetMethod("GetFieldDeserializers").Invoke(item, null);
 
-            foreach (var entry in dictionaryValue)
+            foreach(var entry in dictionaryValue)
             {
                 var fieldName = entry.Key;
-                if (entry.Value is null)
+                if(entry.Value is null)
                     continue;// If the property is already null just continue. As calling functions like GetDouble,GetBoolValue do not process CborReaderState.Null.
-                if (fieldDeserializers.ContainsKey(fieldName) && entry.Value is CborParseNode valueParseNode)
+                if(fieldDeserializers.ContainsKey(fieldName) && entry.Value is CborParseNode valueParseNode)
                 {
                     var fieldDeserializer = fieldDeserializers[fieldName];
                     Debug.WriteLine($"found property {fieldName} to deserialize");
                     fieldDeserializer.Invoke(valueParseNode);
                 }
-                else if (itemAdditionalData != null)
+                else if(itemAdditionalData != null)
                 {
                     Debug.WriteLine($"found additional property {fieldName} to deserialize");
                     IDictionaryExtensions.TryAdd(itemAdditionalData, fieldName, TryGetAnything(entry.Value)!);
@@ -452,8 +448,8 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <returns>An instance of <see cref="IParseNode"/></returns>
         public IParseNode? GetChildNode(string identifier)
         {
-            if (string.IsNullOrEmpty(identifier)) throw new ArgumentNullException(nameof(identifier));
-            if (value is Dictionary<string, object?> dictionary && dictionary.TryGetValue(identifier, out var childValue))
+            if(string.IsNullOrEmpty(identifier)) throw new ArgumentNullException(nameof(identifier));
+            if(value is Dictionary<string, object?> dictionary && dictionary.TryGetValue(identifier, out var childValue))
             {
                 return new CborParseNode(childValue)
                 {
@@ -467,7 +463,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
 
         private static string ToEnumRawName<T>(Type type, string value) where T : struct, Enum
         {
-            if (type.GetMembers().FirstOrDefault(member =>
+            if(type.GetMembers().FirstOrDefault(member =>
                    member.GetCustomAttribute<EnumMemberAttribute>() is { } attr &&
                    value.Equals(attr.Value, StringComparison.Ordinal))?.Name is { } strValue)
                 return strValue;
