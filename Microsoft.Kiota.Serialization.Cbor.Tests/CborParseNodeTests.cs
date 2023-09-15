@@ -57,6 +57,7 @@ public class CborParseNodeTests
         var rootParseNode = new CborParseNode(reader);
         // Act to get business phones list
         var phonesListChildNode = rootParseNode.GetChildNode("businessPhones");
+        Assert.NotNull(phonesListChildNode);
         var phonesList = phonesListChildNode.GetCollectionOfPrimitiveValues<string>().ToArray();
         // Assert
         Assert.NotEmpty(phonesList);

@@ -22,7 +22,7 @@ public sealed class CborSerializationWriterTests : IDisposable
             BirthDay = new Date(2017, 9, 4),
             AdditionalData = new Dictionary<string, object>
                 {
-                    {"mobilePhone",null}, // write null value
+                    {"mobilePhone", null!}, // write null value
                     {"accountEnabled",false}, // write bool value
                     {"jobTitle","Author"}, // write string value
                     {"createdDateTime", DateTimeOffset.MinValue}, // write date value
@@ -46,7 +46,7 @@ public sealed class CborSerializationWriterTests : IDisposable
     [Fact]
     public async Task WritesSampleObjectValueWithCborElementAdditionalData()
     {
-        var nullCborElement = new CborParseNode((object)null);
+        var nullCborElement = new CborParseNode((object?)null);
         var arrayCborElement = new CborParseNode(new List<object>() { "+1 412 555 0109" });
         var objectCborElement = new CborParseNode(new Dictionary<string, object> {
             { "id", "48d31887-5fad-4d73-a9f5-3c356e68a038"}
@@ -92,7 +92,7 @@ public sealed class CborSerializationWriterTests : IDisposable
             TestNamingEnum = TestNamingEnum.Item2SubItem1,
             AdditionalData = new Dictionary<string, object>
                 {
-                    {"mobilePhone",null}, // write null value
+                    {"mobilePhone", null!}, // write null value
                     {"accountEnabled",false}, // write bool value
                     {"jobTitle","Author"}, // write string value
                     {"createdDateTime", DateTimeOffset.MinValue}, // write date value

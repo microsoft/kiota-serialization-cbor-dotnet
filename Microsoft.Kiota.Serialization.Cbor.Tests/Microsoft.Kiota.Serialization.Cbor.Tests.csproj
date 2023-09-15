@@ -5,6 +5,10 @@
     <IsPackable>false</IsPackable>
     <LangVersion>latest</LangVersion>
     <OutputType>Library</OutputType>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);NU5048;CA2007</NoWarn>
+    <AnalysisMode>All</AnalysisMode>
   </PropertyGroup>
 
   <ItemGroup>
