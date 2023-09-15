@@ -1,14 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Kiota.Serialization.Cbor.Tests.Mocks;
 using Xunit;
 
 namespace Microsoft.Kiota.Serialization.Cbor.Tests;
 
-public class UnionWrapperParseTests
+public sealed class UnionWrapperParseTests : IDisposable
 {
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly CborParseNodeFactory _parseNodeFactory = new();
     private readonly CborSerializationWriterFactory _serializationWriterFactory = new();
     private const string contentType = "application/cbor";
@@ -16,11 +20,11 @@ public class UnionWrapperParseTests
     public void ParsesUnionTypeComplexProperty1()
     {
         // Given
-        using var payload = new MemoryStream(Encoding.UTF8.GetBytes("{\"@odata.type\":\"#microsoft.graph.testEntity\",\"officeLocation\":\"Montreal\", \"id\": \"opaque\"}"));
+        using var payload = TestDataHelper.GetCBorDataAsStream("TestUnionTypeComplexProperty1");
         var parseNode = _parseNodeFactory.GetRootParseNode(contentType, payload);
 
         // When
-        var result = parseNode.GetObjectValue<UnionTypeMock>(UnionTypeMock.CreateFromDiscriminator);
+        var result = parseNode.GetObjectValue(UnionTypeMock.CreateFromDiscriminator);
 
         // Then
         Assert.NotNull(result);
@@ -34,11 +38,11 @@ public class UnionWrapperParseTests
     public void ParsesUnionTypeComplexProperty2()
     {
         // Given
-        using var payload = new MemoryStream(Encoding.UTF8.GetBytes("{\"@odata.type\":\"#microsoft.graph.secondTestEntity\",\"officeLocation\":\"Montreal\", \"id\": 10}"));
+        using var payload = TestDataHelper.GetCBorDataAsStream("TestUnionTypeComplexProperty2");
         var parseNode = _parseNodeFactory.GetRootParseNode(contentType, payload);
 
         // When
-        var result = parseNode.GetObjectValue<UnionTypeMock>(UnionTypeMock.CreateFromDiscriminator);
+        var result = parseNode.GetObjectValue(UnionTypeMock.CreateFromDiscriminator);
 
         // Then
         Assert.NotNull(result);
@@ -52,11 +56,11 @@ public class UnionWrapperParseTests
     public void ParsesUnionTypeComplexProperty3()
     {
         // Given
-        using var payload = new MemoryStream(Encoding.UTF8.GetBytes("[{\"@odata.type\":\"#microsoft.graph.TestEntity\",\"officeLocation\":\"Ottawa\", \"id\": \"11\"}, {\"@odata.type\":\"#microsoft.graph.TestEntity\",\"officeLocation\":\"Montreal\", \"id\": \"10\"}]"));
+        using var payload = TestDataHelper.GetCBorDataAsStream("TestUnionTypeComplexProperty3");
         var parseNode = _parseNodeFactory.GetRootParseNode(contentType, payload);
 
         // When
-        var result = parseNode.GetObjectValue<UnionTypeMock>(UnionTypeMock.CreateFromDiscriminator);
+        var result = parseNode.GetObjectValue(UnionTypeMock.CreateFromDiscriminator);
 
         // Then
         Assert.NotNull(result);
@@ -71,11 +75,11 @@ public class UnionWrapperParseTests
     public void ParsesUnionTypeStringValue()
     {
         // Given
-        using var payload = new MemoryStream(Encoding.UTF8.GetBytes("\"officeLocation\""));
+        using var payload = TestDataHelper.GetCBorDataAsStream("TestIntersectionTypeString");
         var parseNode = _parseNodeFactory.GetRootParseNode(contentType, payload);
 
         // When
-        var result = parseNode.GetObjectValue<UnionTypeMock>(UnionTypeMock.CreateFromDiscriminator);
+        var result = parseNode.GetObjectValue(UnionTypeMock.CreateFromDiscriminator);
 
         // Then
         Assert.NotNull(result);
@@ -84,7 +88,7 @@ public class UnionWrapperParseTests
         Assert.Equal("officeLocation", result.StringValue, StringComparer.Ordinal);
     }
     [Fact]
-    public void SerializesUnionTypeStringValue()
+    public async Task SerializesUnionTypeStringValue()
     {
         // Given
         using var writer = _serializationWriterFactory.GetSerializationWriter(contentType);
@@ -95,15 +99,17 @@ public class UnionWrapperParseTests
 
         // When
         writer.WriteObjectValue(string.Empty, model);
-        using var resultStream = writer.GetSerializedContent();
-        using var streamReader = new StreamReader(resultStream);
-        var result = streamReader.ReadToEnd();
+        using var serializedStream = writer.GetSerializedContent();
+        var serializedCborString = await TestDataHelper.GetHexRepresentationFromStream(serializedStream, _cancellationTokenSource.Token);
+
+        // Assert
+        var expectedHex = TestDataHelper.GetCborHex("TestIntersectionTypeString");
 
         // Then
-        Assert.Equal("\"officeLocation\"", result, StringComparer.Ordinal);
+        Assert.Equal(expectedHex, serializedCborString, StringComparer.Ordinal);
     }
     [Fact]
-    public void SerializesUnionTypeComplexProperty1()
+    public async Task SerializesUnionTypeComplexProperty1()
     {
         // Given
         using var writer = _serializationWriterFactory.GetSerializationWriter(contentType);
@@ -113,6 +119,9 @@ public class UnionWrapperParseTests
             {
                 Id = "opaque",
                 OfficeLocation = "Montreal",
+                AdditionalData = new Dictionary<string, object>{
+                    {"@odata.type", "#microsoft.graph.testEntity"}
+                }
             },
             ComposedType2 = new()
             {
@@ -122,15 +131,17 @@ public class UnionWrapperParseTests
 
         // When
         writer.WriteObjectValue(string.Empty, model);
-        using var resultStream = writer.GetSerializedContent();
-        using var streamReader = new StreamReader(resultStream);
-        var result = streamReader.ReadToEnd();
+        using var serializedStream = writer.GetSerializedContent();
+        var serializedCborString = await TestDataHelper.GetHexRepresentationFromStream(serializedStream, _cancellationTokenSource.Token);
+
+        // Assert
+        var expectedHex = TestDataHelper.GetCborHex("TestUnionTypeComplexProperty1");
 
         // Then
-        Assert.Equal("{\"id\":\"opaque\",\"officeLocation\":\"Montreal\"}", result, StringComparer.Ordinal);
+        Assert.Equal(expectedHex, serializedCborString, StringComparer.Ordinal);
     }
     [Fact]
-    public void SerializesUnionTypeComplexProperty2()
+    public async Task SerializesUnionTypeComplexProperty2()
     {
         // Given
         using var writer = _serializationWriterFactory.GetSerializationWriter(contentType);
@@ -145,16 +156,18 @@ public class UnionWrapperParseTests
 
         // When
         writer.WriteObjectValue(string.Empty, model);
-        using var resultStream = writer.GetSerializedContent();
-        using var streamReader = new StreamReader(resultStream);
-        var result = streamReader.ReadToEnd();
+        using var serializedStream = writer.GetSerializedContent();
+        var serializedCborString = await TestDataHelper.GetHexRepresentationFromStream(serializedStream, _cancellationTokenSource.Token);
+
+        // Assert
+        var expectedHex = TestDataHelper.GetCborHex("TestSerializeUnionTypeComplexProperty2");
 
         // Then
-        Assert.Equal("{\"displayName\":\"McGill\",\"id\":10}", result, StringComparer.Ordinal);
+        Assert.Equal(expectedHex, serializedCborString, StringComparer.Ordinal);
     }
 
     [Fact]
-    public void SerializesUnionTypeComplexProperty3()
+    public async Task SerializesUnionTypeComplexProperty3()
     {
         // Given
         using var writer = _serializationWriterFactory.GetSerializationWriter(contentType);
@@ -162,23 +175,32 @@ public class UnionWrapperParseTests
         {
             ComposedType3 = new() {
                 new() {
-                    OfficeLocation = "Montreal",
-                    Id = "10",
-                },
-                new() {
                     OfficeLocation = "Ottawa",
                     Id = "11",
-                }
+                    AdditionalData = new Dictionary<string, object>{
+                        {"@odata.type", "#microsoft.graph.testEntity"}
+                    }
+                },
+                new() {
+                    OfficeLocation = "Montreal",
+                    Id = "10",
+                    AdditionalData = new Dictionary<string, object>{
+                        {"@odata.type", "#microsoft.graph.testEntity"}
+                    }
+                },
             },
         };
 
         // When
         writer.WriteObjectValue(string.Empty, model);
-        using var resultStream = writer.GetSerializedContent();
-        using var streamReader = new StreamReader(resultStream);
-        var result = streamReader.ReadToEnd();
+        using var serializedStream = writer.GetSerializedContent();
+        var serializedCborString = await TestDataHelper.GetHexRepresentationFromStream(serializedStream, _cancellationTokenSource.Token);
+
+        // Assert
+        var expectedHex = TestDataHelper.GetCborHex("TestUnionTypeComplexProperty3");
 
         // Then
-        Assert.Equal("[{\"id\":\"10\",\"officeLocation\":\"Montreal\"},{\"id\":\"11\",\"officeLocation\":\"Ottawa\"}]", result, StringComparer.Ordinal);
+        Assert.Equal(expectedHex, serializedCborString, StringComparer.Ordinal);
     }
+    public void Dispose() => _cancellationTokenSource.Dispose();
 }
