@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -27,7 +28,7 @@ public class UnionWrapperParseTests
         Assert.Null(result.ComposedType2);
         Assert.Null(result.ComposedType3);
         Assert.Null(result.StringValue);
-        Assert.Equal("opaque", result.ComposedType1.Id);
+        Assert.Equal("opaque", result.ComposedType1.Id, StringComparer.Ordinal);
     }
     [Fact]
     public void ParsesUnionTypeComplexProperty2()
@@ -64,7 +65,7 @@ public class UnionWrapperParseTests
         Assert.Null(result.ComposedType1);
         Assert.Null(result.StringValue);
         Assert.Equal(2, result.ComposedType3.Count);
-        Assert.Equal("11", result.ComposedType3.First().Id);
+        Assert.Equal("11", result.ComposedType3.First().Id, StringComparer.Ordinal);
     }
     [Fact]
     public void ParsesUnionTypeStringValue()
@@ -80,7 +81,7 @@ public class UnionWrapperParseTests
         Assert.NotNull(result);
         Assert.Null(result.ComposedType2);
         Assert.Null(result.ComposedType1);
-        Assert.Equal("officeLocation", result.StringValue);
+        Assert.Equal("officeLocation", result.StringValue, StringComparer.Ordinal);
     }
     [Fact]
     public void SerializesUnionTypeStringValue()
@@ -99,7 +100,7 @@ public class UnionWrapperParseTests
         var result = streamReader.ReadToEnd();
 
         // Then
-        Assert.Equal("\"officeLocation\"", result);
+        Assert.Equal("\"officeLocation\"", result, StringComparer.Ordinal);
     }
     [Fact]
     public void SerializesUnionTypeComplexProperty1()
@@ -126,7 +127,7 @@ public class UnionWrapperParseTests
         var result = streamReader.ReadToEnd();
 
         // Then
-        Assert.Equal("{\"id\":\"opaque\",\"officeLocation\":\"Montreal\"}", result);
+        Assert.Equal("{\"id\":\"opaque\",\"officeLocation\":\"Montreal\"}", result, StringComparer.Ordinal);
     }
     [Fact]
     public void SerializesUnionTypeComplexProperty2()
@@ -149,7 +150,7 @@ public class UnionWrapperParseTests
         var result = streamReader.ReadToEnd();
 
         // Then
-        Assert.Equal("{\"displayName\":\"McGill\",\"id\":10}", result);
+        Assert.Equal("{\"displayName\":\"McGill\",\"id\":10}", result, StringComparer.Ordinal);
     }
 
     [Fact]
@@ -178,6 +179,6 @@ public class UnionWrapperParseTests
         var result = streamReader.ReadToEnd();
 
         // Then
-        Assert.Equal("[{\"id\":\"10\",\"officeLocation\":\"Montreal\"},{\"id\":\"11\",\"officeLocation\":\"Ottawa\"}]", result);
+        Assert.Equal("[{\"id\":\"10\",\"officeLocation\":\"Montreal\"},{\"id\":\"11\",\"officeLocation\":\"Ottawa\"}]", result, StringComparer.Ordinal);
     }
 }

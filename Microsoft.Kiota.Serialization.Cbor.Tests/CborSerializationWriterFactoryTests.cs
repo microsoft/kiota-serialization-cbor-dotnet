@@ -30,7 +30,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
 
             // Assert
             Assert.NotNull(exception);
-            Assert.Equal($"expected a {_cborSerializationFactory.ValidContentType} content type", exception.ParamName);
+            Assert.Equal($"expected a {_cborSerializationFactory.ValidContentType} content type", exception.ParamName, StringComparer.Ordinal);
         }
 
         [Theory]
@@ -42,7 +42,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
 
             // Assert
             Assert.NotNull(exception);
-            Assert.Equal("contentType", exception.ParamName);
+            Assert.Equal("contentType", exception.ParamName, StringComparer.Ordinal);
         }
     }
 }

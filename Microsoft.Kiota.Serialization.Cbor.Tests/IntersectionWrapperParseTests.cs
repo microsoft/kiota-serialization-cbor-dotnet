@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -27,8 +28,8 @@ public class IntersectionWrapperParseTests
         Assert.NotNull(result.ComposedType2);
         Assert.Null(result.ComposedType3);
         Assert.Null(result.StringValue);
-        Assert.Equal("opaque", result.ComposedType1.Id);
-        Assert.Equal("McGill", result.ComposedType2.DisplayName);
+        Assert.Equal("opaque", result.ComposedType1.Id, StringComparer.Ordinal);
+        Assert.Equal("McGill", result.ComposedType2.DisplayName, StringComparer.Ordinal);
     }
     [Fact]
     public void ParsesIntersectionTypeComplexProperty2()
@@ -48,7 +49,7 @@ public class IntersectionWrapperParseTests
         Assert.Null(result.StringValue);
         Assert.Null(result.ComposedType1.Id);
         Assert.Null(result.ComposedType2.Id); // it's expected to be null since we have conflicting properties here and the parser will only try one to avoid having to brute its way through
-        Assert.Equal("McGill", result.ComposedType2.DisplayName);
+        Assert.Equal("McGill", result.ComposedType2.DisplayName, StringComparer.Ordinal);
     }
     [Fact]
     public void ParsesIntersectionTypeComplexProperty3()
@@ -67,7 +68,7 @@ public class IntersectionWrapperParseTests
         Assert.NotNull(result.ComposedType3);
         Assert.Null(result.StringValue);
         Assert.Equal(2, result.ComposedType3.Count);
-        Assert.Equal("Ottawa", result.ComposedType3.First().OfficeLocation);
+        Assert.Equal("Ottawa", result.ComposedType3.First().OfficeLocation, StringComparer.Ordinal);
     }
     [Fact]
     public void ParsesIntersectionTypeStringValue()
@@ -84,7 +85,7 @@ public class IntersectionWrapperParseTests
         Assert.Null(result.ComposedType2);
         Assert.Null(result.ComposedType1);
         Assert.Null(result.ComposedType3);
-        Assert.Equal("officeLocation", result.StringValue);
+        Assert.Equal("officeLocation", result.StringValue, StringComparer.Ordinal);
     }
     [Fact]
     public void SerializesIntersectionTypeStringValue()
@@ -103,7 +104,7 @@ public class IntersectionWrapperParseTests
         var result = streamReader.ReadToEnd();
 
         // Then
-        Assert.Equal("\"officeLocation\"", result);
+        Assert.Equal("\"officeLocation\"", result, StringComparer.Ordinal);
     }
     [Fact]
     public void SerializesIntersectionTypeComplexProperty1()
@@ -130,7 +131,7 @@ public class IntersectionWrapperParseTests
         var result = streamReader.ReadToEnd();
 
         // Then
-        Assert.Equal("{\"id\":\"opaque\",\"officeLocation\":\"Montreal\",\"displayName\":\"McGill\"}", result);
+        Assert.Equal("{\"id\":\"opaque\",\"officeLocation\":\"Montreal\",\"displayName\":\"McGill\"}", result, StringComparer.Ordinal);
     }
     [Fact]
     public void SerializesIntersectionTypeComplexProperty2()
@@ -153,7 +154,7 @@ public class IntersectionWrapperParseTests
         var result = streamReader.ReadToEnd();
 
         // Then
-        Assert.Equal("{\"displayName\":\"McGill\",\"id\":10}", result);
+        Assert.Equal("{\"displayName\":\"McGill\",\"id\":10}", result, StringComparer.Ordinal);
     }
 
     [Fact]
@@ -182,6 +183,6 @@ public class IntersectionWrapperParseTests
         var result = streamReader.ReadToEnd();
 
         // Then
-        Assert.Equal("[{\"id\":\"10\",\"officeLocation\":\"Montreal\"},{\"id\":\"11\",\"officeLocation\":\"Ottawa\"}]", result);
+        Assert.Equal("[{\"id\":\"10\",\"officeLocation\":\"Montreal\"},{\"id\":\"11\",\"officeLocation\":\"Ottawa\"}]", result, StringComparer.Ordinal);
     }
 }

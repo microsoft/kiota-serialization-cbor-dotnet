@@ -25,8 +25,8 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
             Assert.NotEmpty(testEntity.AdditionalData);
             Assert.True(testEntity.AdditionalData.ContainsKey("jobTitle"));
             Assert.True(testEntity.AdditionalData.ContainsKey("mobilePhone"));
-            Assert.Equal("Auditor", testEntity.AdditionalData["jobTitle"]);
-            Assert.Equal("48d31887-5fad-4d73-a9f5-3c356e68a038", testEntity.Id);
+            Assert.Equal("Auditor", testEntity.AdditionalData["jobTitle"] as string, StringComparer.Ordinal);
+            Assert.Equal("48d31887-5fad-4d73-a9f5-3c356e68a038", testEntity.Id, StringComparer.Ordinal);
             Assert.Equal(TestEnum.One | TestEnum.Two, testEntity.Numbers); // Unknown enum value is not included
             Assert.Equal(TestNamingEnum.Item2SubItem1, testEntity.TestNamingEnum); // correct value is chosen
             Assert.Equal(TimeSpan.FromHours(1), testEntity.WorkDuration); // Parses timespan values
@@ -46,7 +46,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
             var testEntityCollection = cborParseNode.GetCollectionOfObjectValues(static x => new TestEntity()).ToArray();
             // Assert
             Assert.NotEmpty(testEntityCollection);
-            Assert.Equal("48d31887-5fad-4d73-a9f5-3c356e68a038", testEntityCollection[0].Id);
+            Assert.Equal("48d31887-5fad-4d73-a9f5-3c356e68a038", testEntityCollection[0].Id, StringComparer.Ordinal);
         }
 
         [Fact]
@@ -61,7 +61,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
             var phonesList = phonesListChildNode.GetCollectionOfPrimitiveValues<string>().ToArray();
             // Assert
             Assert.NotEmpty(phonesList);
-            Assert.Equal("+1 412 555 0109", phonesList[0]);
+            Assert.Equal("+1 412 555 0109", phonesList[0], StringComparer.Ordinal);
         }
 
         [Fact]
