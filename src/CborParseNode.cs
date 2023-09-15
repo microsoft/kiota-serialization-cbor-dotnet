@@ -66,17 +66,19 @@ namespace Microsoft.Kiota.Serialization.Cbor
                 case CborReaderState.SinglePrecisionFloat:
                     return AssignEventValues(new CborParseNode(rdr.ReadSingle()));
                 case CborReaderState.HalfPrecisionFloat:
-                    return AssignEventValues(new CborParseNode(rdr.ReadDecimal()));
+                    return AssignEventValues(new CborParseNode(rdr.ReadDouble()));
                 case CborReaderState.UnsignedInteger:
                     return AssignEventValues(new CborParseNode(rdr.ReadUInt64()));
                 case CborReaderState.NegativeInteger:
                     return AssignEventValues(new CborParseNode(rdr.ReadInt64()));
-                case CborReaderState.TextString or CborReaderState.StartIndefiniteLengthTextString when rdr.TryReadDateTimeOffset(out var dateTimeOffset):
-                    return AssignEventValues(new CborParseNode(dateTimeOffset));
                 case CborReaderState.TextString or CborReaderState.StartIndefiniteLengthTextString:
                     return AssignEventValues(new CborParseNode(rdr.ReadTextString()));
                 case CborReaderState.ByteString when rdr.TryReadGuid(out var guid):
                     return AssignEventValues(new CborParseNode(guid));
+                case CborReaderState.Tag when rdr.TryReadDateTimeOffset(out var dateTimeOffset):
+                    return AssignEventValues(new CborParseNode(dateTimeOffset));
+                case CborReaderState.Tag when rdr.TryReadDecimal(out var decimalValue):
+                    return AssignEventValues(new CborParseNode(decimalValue));
                 case CborReaderState.Undefined:
                 case CborReaderState.Null:
                     rdr.ReadNull();
@@ -108,7 +110,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// Get the sbyte value from the cbor node
         /// </summary>
         /// <returns>A sbyte value</returns>
-        public sbyte? GetSbyteValue() => value is sbyte sbyteValue ? sbyteValue : null;
+        public sbyte? GetSbyteValue() => GetIntValue() is int sbyteValue ? Convert.ToSByte(sbyteValue) : null;
 
         /// <summary>
         /// Get the int value from the cbor node
@@ -132,7 +134,12 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// Get the Long value from the cbor node
         /// </summary>
         /// <returns>A Long value</returns>
-        public long? GetLongValue() => value is long longValue ? longValue : null;
+        public long? GetLongValue() => value switch
+        {
+            long longValue => longValue,
+            ulong longValue => Convert.ToInt64(longValue),
+            _ => null,
+        };
 
         /// <summary>
         /// Get the double value from the cbor node

@@ -35,5 +35,18 @@ static internal class CBorReaderExtensions
             return false;
         }
     }
+    static internal bool TryReadDecimal(this CborReader reader, out decimal value)
+    {
+        try
+        {
+            value = reader.ReadDecimal();
+            return true;
+        }
+        catch
+        {
+            value = default;
+            return false;
+        }
+    }
 
 }
