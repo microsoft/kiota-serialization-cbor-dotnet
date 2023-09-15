@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Formats.Cbor;
-using System.IO;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Kiota.Abstractions;
@@ -47,23 +44,13 @@ public sealed class CborSerializationWriterTests : IDisposable
     }
 
     [Fact]
-    public void WritesSampleObjectValueWithCborElementAdditionalData()
+    public async Task WritesSampleObjectValueWithCborElementAdditionalData()
     {
-        var writer = new CborWriter();
-        writer.WriteSimpleValue(CborSimpleValue.Null);
-        var nullCborElement = writer.Encode();
-        writer.Reset();
-        writer.WriteStartArray(1);
-        writer.WriteTextString("[\"+1 412 555 0109\"]");
-        writer.WriteEndArray();
-        var arrayCborElement = writer.Encode();
-        writer.Reset();
-        writer.WriteStartMap(1);
-        writer.WriteTextString("id");
-        writer.WriteTextString("48d31887-5fad-4d73-a9f5-3c356e68a038\"}");
-        writer.WriteEndMap();
-        var objectCborElement = writer.Encode();
-        writer.Reset();
+        var nullCborElement = new CborParseNode((object)null);
+        var arrayCborElement = new CborParseNode(new List<object>() { "+1 412 555 0109" });
+        var objectCborElement = new CborParseNode(new Dictionary<string, object> {
+            { "id", "48d31887-5fad-4d73-a9f5-3c356e68a038"}
+        });
 
         // Arrange
         var testEntity = new TestEntity()
@@ -86,24 +73,12 @@ public sealed class CborSerializationWriterTests : IDisposable
         // Act
         cborSerializerWriter.WriteObjectValue(string.Empty, testEntity);
         // Get the payload from the stream.
-        var serializedStream = cborSerializerWriter.GetSerializedContent();
-        using var reader = new StreamReader(serializedStream, Encoding.UTF8);
-        var serializedCborString = reader.ReadToEnd();
+        using var serializedStream = cborSerializerWriter.GetSerializedContent();
+        var serializedCborString = await TestDataHelper.GetHexRepresentationFromStream(serializedStream, _cancellationTokenSource.Token);
 
         // Assert
-        var expectedString = "{" +
-                             "\"id\":\"48d31887-5fad-4d73-a9f5-3c356e68a038\"," +
-                             "\"workDuration\":\"PT1H\"," +    // Serializes timespans
-                             "\"birthDay\":\"2017-09-04\"," + // Serializes dates
-                             "\"startWorkTime\":\"08:00:00\"," + //Serializes times
-                             "\"mobilePhone\":null," +
-                             "\"accountEnabled\":false," +
-                             "\"jobTitle\":\"Author\"," +
-                             "\"createdDateTime\":\"0001-01-01T00:00:00+00:00\"," +
-                             "\"businessPhones\":[\"\\u002B1 412 555 0109\"]," +
-                             "\"manager\":{\"id\":\"48d31887-5fad-4d73-a9f5-3c356e68a038\"}" +
-                             "}";
-        Assert.Equal(expectedString, serializedCborString, StringComparer.Ordinal);
+        var expectedHex = TestDataHelper.GetCborHex("TestAdditionalDataWrite");
+        Assert.Equal(expectedHex, serializedCborString, StringComparer.Ordinal);
     }
 
     [Fact]
@@ -139,7 +114,7 @@ public sealed class CborSerializationWriterTests : IDisposable
     }
 
     [Fact]
-    public void WritesEnumValuesAsCamelCasedIfNotEscaped()
+    public async Task WritesEnumValuesAsCamelCasedIfNotEscaped()
     {
         // Arrange
         var testEntity = new TestEntity()
@@ -151,19 +126,16 @@ public sealed class CborSerializationWriterTests : IDisposable
         // Act
         cborSerializerWriter.WriteCollectionOfObjectValues(string.Empty, entityList);
         // Get the payload from the stream.
-        var serializedStream = cborSerializerWriter.GetSerializedContent();
-        using var reader = new StreamReader(serializedStream, Encoding.UTF8);
-        var serializedCborString = reader.ReadToEnd();
+        using var serializedStream = cborSerializerWriter.GetSerializedContent();
+        var serializedCborString = await TestDataHelper.GetHexRepresentationFromStream(serializedStream, _cancellationTokenSource.Token);
 
         // Assert
-        var expectedString = "[{" +
-                             "\"testNamingEnum\":\"item1\"" + // Camel Cased
-                             "}]";
-        Assert.Equal(expectedString, serializedCborString, StringComparer.Ordinal);
+        var expectedHex = TestDataHelper.GetCborHex("TestEnumWrite");
+        Assert.Equal(expectedHex, serializedCborString, StringComparer.Ordinal);
     }
 
     [Fact]
-    public void WritesEnumValuesAsDescribedIfEscaped()
+    public async Task WritesEnumValuesAsDescribedIfEscaped()
     {
         // Arrange
         var testEntity = new TestEntity()
@@ -175,15 +147,12 @@ public sealed class CborSerializationWriterTests : IDisposable
         // Act
         cborSerializerWriter.WriteCollectionOfObjectValues(string.Empty, entityList);
         // Get the payload from the stream.
-        var serializedStream = cborSerializerWriter.GetSerializedContent();
-        using var reader = new StreamReader(serializedStream, Encoding.UTF8);
-        var serializedCborString = reader.ReadToEnd();
+        using var serializedStream = cborSerializerWriter.GetSerializedContent();
+        var serializedCborString = await TestDataHelper.GetHexRepresentationFromStream(serializedStream, _cancellationTokenSource.Token);
 
         // Assert
-        var expectedString = "[{" +
-                             "\"testNamingEnum\":\"Item2:SubItem1\"" + // Appears same as attribute
-                             "}]";
-        Assert.Equal(expectedString, serializedCborString, StringComparer.Ordinal);
+        var expectedHex = TestDataHelper.GetCborHex("TestEnumEscapedWrite");
+        Assert.Equal(expectedHex, serializedCborString, StringComparer.Ordinal);
     }
 
     public void Dispose() => _cancellationTokenSource.Dispose();

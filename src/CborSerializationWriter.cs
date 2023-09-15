@@ -354,12 +354,15 @@ namespace Microsoft.Kiota.Serialization.Cbor
                 writer.WriteTextString(key!);
             writer.WriteStartMap(null);
             if(value == null) writer.WriteSimpleValue(CborSimpleValue.Null);
+            else if(value is Dictionary<string, object> dict)
+                foreach(var dictValue in dict)
+                    WriteAnyValue(dictValue.Key, dictValue.Value);
             else
                 foreach(var oProp in value.GetType().GetProperties())
                     WriteAnyValue(oProp.Name, oProp.GetValue(value));
             writer.WriteEndMap();
         }
-        private void WriteAnyValue<T>(string? key, T value)
+        internal void WriteAnyValue<T>(string? key, T value)
         {
             switch(value)
             {
@@ -411,10 +414,10 @@ namespace Microsoft.Kiota.Serialization.Cbor
                 case Time time:
                     WriteTimeValue(key, time);
                     break;
-                // case JsonElement jsonElement:
-                //     if(!string.IsNullOrEmpty(key)) writer.WriteTextString(key!);
-                //     jsonElement.WriteTo(writer);
-                //     break;
+                case CborParseNode cborElement:
+                    if(!string.IsNullOrEmpty(key)) writer.WriteTextString(key!);
+                    cborElement.WriteTo(this);
+                    break;
                 case object o:
                     WriteNonParsableObjectValue(key, o);
                     break;

@@ -8,12 +8,14 @@ using System.Diagnostics;
 using System.Formats.Cbor;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml;
 using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions.Serialization;
 
+[assembly: InternalsVisibleTo("Microsoft.Kiota.Serialization.Cbor.Tests")]
 namespace Microsoft.Kiota.Serialization.Cbor
 {
     /// <summary>
@@ -29,7 +31,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         {
             value = LoadCborTree(reader);
         }
-        private CborParseNode(object? value)
+        internal CborParseNode(object? value)
         {
             this.value = value;
         }
@@ -461,6 +463,13 @@ namespace Microsoft.Kiota.Serialization.Cbor
                 return strValue;
 
             return value;
+        }
+
+        internal void WriteTo(CborSerializationWriter writer)
+        {
+            if(writer is null) throw new ArgumentNullException(nameof(writer));
+            var value = TryGetAnything(this.value);
+            writer.WriteAnyValue(string.Empty, value);
         }
     }
 }
