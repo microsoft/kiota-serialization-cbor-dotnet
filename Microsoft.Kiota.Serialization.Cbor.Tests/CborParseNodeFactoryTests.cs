@@ -10,7 +10,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         [Fact]
         public void GetsWriterForCborContentType()
         {
-            var data = TestDataHelper.GetCBorData("TestUserCbor.hex");
+            var data = TestDataHelper.GetCBorData("TestCborString");
             using var cborStream = new MemoryStream(data);
             var cborWriter = _cborParseNodeFactory.GetRootParseNode(_cborParseNodeFactory.ValidContentType, cborStream);
 
@@ -23,7 +23,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         public void ThrowsArgumentOutOfRangeExceptionForInvalidContentType()
         {
             var streamContentType = "application/octet-stream";
-            var data = TestDataHelper.GetCBorData("TestUserCbor.hex");
+            var data = TestDataHelper.GetCBorData("TestCborString");
             using var cborStream = new MemoryStream(data);
             var exception = Assert.Throws<ArgumentOutOfRangeException>(() => _cborParseNodeFactory.GetRootParseNode(streamContentType, cborStream));
 
@@ -37,7 +37,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         [InlineData("")]
         public void ThrowsArgumentNullExceptionForNoContentType(string contentType)
         {
-            var data = TestDataHelper.GetCBorData("TestUserCbor.hex");
+            var data = TestDataHelper.GetCBorData("TestCborString");
             using var cborStream = new MemoryStream(data);
             var exception = Assert.Throws<ArgumentNullException>(() => _cborParseNodeFactory.GetRootParseNode(contentType, cborStream));
 

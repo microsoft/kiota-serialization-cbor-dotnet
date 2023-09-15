@@ -3,16 +3,19 @@ using System.Collections.Generic;
 using System.Formats.Cbor;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Serialization.Cbor.Tests.Mocks;
 using Xunit;
 
 namespace Microsoft.Kiota.Serialization.Cbor.Tests
 {
-    public class CborSerializationWriterTests
+    public sealed class CborSerializationWriterTests : IDisposable
     {
+        private readonly CancellationTokenSource _cancellationTokenSource = new();
         [Fact]
-        public void WritesSampleObjectValue()
+        public async Task WritesSampleObjectValue()
         {
             // Arrange
             var testEntity = new TestEntity()
@@ -36,25 +39,12 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
             // Act
             cborSerializerWriter.WriteObjectValue(string.Empty, testEntity);
             // Get the payload from the stream.
-            var serializedStream = cborSerializerWriter.GetSerializedContent();
-            using var reader = new StreamReader(serializedStream, Encoding.UTF8);
-            var serializedCborString = reader.ReadToEnd();
+            using var serializedStream = cborSerializerWriter.GetSerializedContent();
+            var serializedCborString = await TestDataHelper.GetHexRepresentationFromStream(serializedStream, _cancellationTokenSource.Token);
 
             // Assert
-            var expectedString = "{" +
-                                 "\"id\":\"48d31887-5fad-4d73-a9f5-3c356e68a038\"," +
-                                 "\"workDuration\":\"PT1H\"," +    // Serializes timespans
-                                 "\"birthDay\":\"2017-09-04\"," + // Serializes dates
-                                 "\"startWorkTime\":\"08:00:00\"," + //Serializes times
-                                 "\"mobilePhone\":null," +
-                                 "\"accountEnabled\":false," +
-                                 "\"jobTitle\":\"Author\"," +
-                                 "\"createdDateTime\":\"0001-01-01T00:00:00+00:00\"," +
-                                 "\"businessPhones\":[\"\\u002B1 412 555 0109\"]," +
-                                 "\"endDateTime\":\"2023-03-14T00:00:00+00:00\"," +
-                                 "\"manager\":{\"id\":\"48d31887-5fad-4d73-a9f5-3c356e68a038\"}" +
-                                 "}";
-            Assert.Equal(expectedString, serializedCborString);
+            var expectedHex = TestDataHelper.GetCborHex("TestUserWrite");
+            Assert.Equal(expectedHex, serializedCborString);
         }
 
         [Fact]
@@ -208,5 +198,6 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
             Assert.Equal(expectedString, serializedCborString);
         }
 
+        public void Dispose() => _cancellationTokenSource.Dispose();
     }
 }

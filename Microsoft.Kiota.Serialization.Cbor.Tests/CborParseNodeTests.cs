@@ -14,7 +14,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         public void GetsEntityValueFromCbor()
         {
             // Arrange
-            var data = TestDataHelper.GetCBorData("TestUserCbor.hex");
+            var data = TestDataHelper.GetCBorData("TestUserCbor");
             var reader = new CborReader(data);
             var cborParseNode = new CborParseNode(reader);
             // Act
@@ -39,7 +39,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         public void GetCollectionOfObjectValuesFromCbor()
         {
             // Arrange
-            var data = TestDataHelper.GetCBorData("TestUserCollectionCbor.hex");
+            var data = TestDataHelper.GetCBorData("TestUserCollectionCbor");
             var reader = new CborReader(data);
             var cborParseNode = new CborParseNode(reader);
             // Act
@@ -53,7 +53,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         public void GetsChildNodeAndGetCollectionOfPrimitiveValuesFromCborParseNode()
         {
             // Arrange
-            var data = TestDataHelper.GetCBorData("TestUserCbor.hex");
+            var data = TestDataHelper.GetCBorData("TestUserCbor");
             var reader = new CborReader(data);
             var rootParseNode = new CborParseNode(reader);
             // Act to get business phones list
@@ -68,7 +68,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         public void ReturnsDefaultIfChildNodeDoesNotExist()
         {
             // Arrange
-            var data = TestDataHelper.GetCBorData("TestUserCbor.hex");
+            var data = TestDataHelper.GetCBorData("TestUserCbor");
             var reader = new CborReader(data);
             var rootParseNode = new CborParseNode(reader);
             // Try to get an imaginary node value

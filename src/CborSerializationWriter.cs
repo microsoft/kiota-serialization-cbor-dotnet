@@ -21,8 +21,6 @@ namespace Microsoft.Kiota.Serialization.Cbor
     /// </summary>
     public class CborSerializationWriter : ISerializationWriter, IDisposable
     {
-        private readonly MemoryStream _stream = new MemoryStream();
-
         /// <summary>
         /// The <see cref="CborWriter"/> instance for writing cbor content
         /// </summary>
@@ -55,11 +53,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// Get the stream of the serialized content
         /// </summary>
         /// <returns>The <see cref="Stream"/> of the serialized content</returns>
-        public Stream GetSerializedContent()
-        {
-            var stream = new MemoryStream(writer.Encode());
-            return stream;
-        }
+        public Stream GetSerializedContent() => new MemoryStream(writer.Encode());
 
         /// <summary>
         /// Write the string value

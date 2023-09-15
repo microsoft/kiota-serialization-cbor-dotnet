@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Xml;
+using System.Xml.Linq;
 using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions.Serialization;
@@ -69,8 +70,9 @@ namespace Microsoft.Kiota.Serialization.Cbor
                     return new CborParseNode(rdr.ReadUInt64());
                 case CborReaderState.NegativeInteger:
                     return new CborParseNode(rdr.ReadInt64());
-                case CborReaderState.TextString:
-                case CborReaderState.StartIndefiniteLengthTextString:
+                case CborReaderState.TextString or CborReaderState.StartIndefiniteLengthTextString when rdr.TryReadDateTimeOffset(out var dateTimeOffset):
+                    return new CborParseNode(dateTimeOffset);
+                case CborReaderState.TextString or CborReaderState.StartIndefiniteLengthTextString:
                     return new CborParseNode(rdr.ReadTextString());
                 case CborReaderState.Undefined:
                 case CborReaderState.Null:
@@ -409,37 +411,34 @@ namespace Microsoft.Kiota.Serialization.Cbor
                 }
             }
         }
-        private static object? TryGetAnything(object? val)
+        private static object? TryGetAnything(object? val) => val switch
         {
-            return val switch
-            {
-                double d => d,
-                float f => f,
-                short s => s,
-                decimal de => de,
-                ulong ui64 => ui64,
-                uint ui32 => ui32,
-                ushort ui16 => ui16,
-                int i => i,
-                long l => l,
-                byte b => b,
-                string str when DateTime.TryParse(str, out var dt) => dt,
-                string str when DateTimeOffset.TryParse(str, out var dto) => dto,
-                string str when Guid.TryParse(str, out var g) => g,
-                string str => str,
-                int[] intArray => intArray,
-                string[] strArray => strArray,
-                object?[] arrayValue => arrayValue.Select(TryGetAnything).ToArray(),
-                List<object?> listValue => listValue.Select(TryGetAnything).ToArray(),
-                Dictionary<string, object?> dictionaryValue => dictionaryValue,
-                CborParseNode node => TryGetAnything(node.value),
-                // case JsonValueKind.Object:
-                //     return element;
-                bool b => b,
-                null => null,
-                _ => throw new InvalidOperationException($"unexpected additional value type during deserialization json kind : {val.GetType()}"),
-            };
-        }
+            double d => d,
+            float f => f,
+            short s => s,
+            decimal de => de,
+            ulong ui64 => ui64,
+            uint ui32 => ui32,
+            ushort ui16 => ui16,
+            int i => i,
+            long l => l,
+            byte b => b,
+            string str when DateTime.TryParse(str, out var dt) => dt,
+            string str when DateTimeOffset.TryParse(str, out var dto) => dto,
+            string str when Guid.TryParse(str, out var g) => g,
+            string str => str,
+            int[] intArray => intArray,
+            string[] strArray => strArray,
+            object?[] arrayValue => arrayValue.Select(TryGetAnything).ToArray(),
+            List<object?> listValue => listValue.Select(TryGetAnything).ToArray(),
+            Dictionary<string, object?> dictionaryValue => dictionaryValue,
+            CborParseNode node => TryGetAnything(node.value),
+            // case JsonValueKind.Object:
+            //     return element;
+            bool b => b,
+            null => null,
+            _ => throw new InvalidOperationException($"unexpected additional value type during deserialization json kind : {val.GetType()}"),
+        };
 
         /// <summary>
         /// Get the child node of the specified identifier
