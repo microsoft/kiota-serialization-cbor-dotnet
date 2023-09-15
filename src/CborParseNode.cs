@@ -372,7 +372,6 @@ namespace Microsoft.Kiota.Serialization.Cbor
         }
         private void AssignFieldValues<T>(T item) where T : IParsable
         {
-
             if(value is not Dictionary<string, object?> dictionaryValue) return;
             IDictionary<string, object>? itemAdditionalData = null;
             if(item is IAdditionalDataHolder holder)
@@ -384,11 +383,9 @@ namespace Microsoft.Kiota.Serialization.Cbor
             //the below line fixes the issue
             var fieldDeserializers = (IDictionary<string, Action<IParseNode>>)item.GetType().GetMethod("GetFieldDeserializers").Invoke(item, null);
 
-            foreach(var entry in dictionaryValue)
-            {
+            foreach(var entry in dictionaryValue.Where(x => x.Value is not null))
+            {// If the property is already null just continue. As calling functions like GetDouble,GetBoolValue do not process CborReaderState.Null.
                 var fieldName = entry.Key;
-                if(entry.Value is null)
-                    continue;// If the property is already null just continue. As calling functions like GetDouble,GetBoolValue do not process CborReaderState.Null.
                 if(fieldDeserializers.ContainsKey(fieldName) && entry.Value is CborParseNode valueParseNode)
                 {
                     var fieldDeserializer = fieldDeserializers[fieldName];
