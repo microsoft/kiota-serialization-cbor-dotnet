@@ -1,14 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Kiota.Serialization.Cbor.Tests.Mocks;
 using Xunit;
 
 namespace Microsoft.Kiota.Serialization.Cbor.Tests;
 
-public class IntersectionWrapperParseTests
+public sealed class IntersectionWrapperParseTests : IDisposable
 {
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly CborParseNodeFactory _parseNodeFactory = new();
     private readonly CborSerializationWriterFactory _serializationWriterFactory = new();
     private const string contentType = "application/cbor";
@@ -16,11 +19,12 @@ public class IntersectionWrapperParseTests
     public void ParsesIntersectionTypeComplexProperty1()
     {
         // Given
-        using var payload = new MemoryStream(Encoding.UTF8.GetBytes("{\"displayName\":\"McGill\",\"officeLocation\":\"Montreal\", \"id\": \"opaque\"}"));
+        using var payload = TestDataHelper.GetCBorDataAsStream("TestIntersectionTypeComplexProperty1");
+
         var parseNode = _parseNodeFactory.GetRootParseNode(contentType, payload);
 
         // When
-        var result = parseNode.GetObjectValue<IntersectionTypeMock>(IntersectionTypeMock.CreateFromDiscriminator);
+        var result = parseNode.GetObjectValue(IntersectionTypeMock.CreateFromDiscriminator);
 
         // Then
         Assert.NotNull(result);
@@ -35,11 +39,11 @@ public class IntersectionWrapperParseTests
     public void ParsesIntersectionTypeComplexProperty2()
     {
         // Given
-        using var payload = new MemoryStream(Encoding.UTF8.GetBytes("{\"displayName\":\"McGill\",\"officeLocation\":\"Montreal\", \"id\": 10}"));
+        using var payload = TestDataHelper.GetCBorDataAsStream("TestIntersectionTypeComplexProperty2");
         var parseNode = _parseNodeFactory.GetRootParseNode(contentType, payload);
 
         // When
-        var result = parseNode.GetObjectValue<IntersectionTypeMock>(IntersectionTypeMock.CreateFromDiscriminator);
+        var result = parseNode.GetObjectValue(IntersectionTypeMock.CreateFromDiscriminator);
 
         // Then
         Assert.NotNull(result);
@@ -50,16 +54,17 @@ public class IntersectionWrapperParseTests
         Assert.Null(result.ComposedType1.Id);
         Assert.Null(result.ComposedType2.Id); // it's expected to be null since we have conflicting properties here and the parser will only try one to avoid having to brute its way through
         Assert.Equal("McGill", result.ComposedType2.DisplayName, StringComparer.Ordinal);
+        Assert.Equal("Montreal", result.ComposedType1.OfficeLocation, StringComparer.Ordinal);
     }
     [Fact]
     public void ParsesIntersectionTypeComplexProperty3()
     {
         // Given
-        using var payload = new MemoryStream(Encoding.UTF8.GetBytes("[{\"@odata.type\":\"#microsoft.graph.TestEntity\",\"officeLocation\":\"Ottawa\", \"id\": \"11\"}, {\"@odata.type\":\"#microsoft.graph.TestEntity\",\"officeLocation\":\"Montreal\", \"id\": \"10\"}]"));
+        using var payload = TestDataHelper.GetCBorDataAsStream("TestIntersectionTypeComplexProperty3");
         var parseNode = _parseNodeFactory.GetRootParseNode(contentType, payload);
 
         // When
-        var result = parseNode.GetObjectValue<IntersectionTypeMock>(IntersectionTypeMock.CreateFromDiscriminator);
+        var result = parseNode.GetObjectValue(IntersectionTypeMock.CreateFromDiscriminator);
 
         // Then
         Assert.NotNull(result);
@@ -74,11 +79,11 @@ public class IntersectionWrapperParseTests
     public void ParsesIntersectionTypeStringValue()
     {
         // Given
-        using var payload = new MemoryStream(Encoding.UTF8.GetBytes("\"officeLocation\""));
+        using var payload = TestDataHelper.GetCBorDataAsStream("TestIntersectionTypeString");
         var parseNode = _parseNodeFactory.GetRootParseNode(contentType, payload);
 
         // When
-        var result = parseNode.GetObjectValue<IntersectionTypeMock>(IntersectionTypeMock.CreateFromDiscriminator);
+        var result = parseNode.GetObjectValue(IntersectionTypeMock.CreateFromDiscriminator);
 
         // Then
         Assert.NotNull(result);
@@ -88,7 +93,7 @@ public class IntersectionWrapperParseTests
         Assert.Equal("officeLocation", result.StringValue, StringComparer.Ordinal);
     }
     [Fact]
-    public void SerializesIntersectionTypeStringValue()
+    public async Task SerializesIntersectionTypeStringValue()
     {
         // Given
         using var writer = _serializationWriterFactory.GetSerializationWriter(contentType);
@@ -99,15 +104,18 @@ public class IntersectionWrapperParseTests
 
         // When
         model.Serialize(writer);
-        using var resultStream = writer.GetSerializedContent();
-        using var streamReader = new StreamReader(resultStream);
-        var result = streamReader.ReadToEnd();
+        // Get the payload from the stream.
+        using var serializedStream = writer.GetSerializedContent();
+        var serializedCborString = await TestDataHelper.GetHexRepresentationFromStream(serializedStream, _cancellationTokenSource.Token);
+
+        // Assert
+        var expectedHex = TestDataHelper.GetCborHex("TestIntersectionTypeString");
 
         // Then
-        Assert.Equal("\"officeLocation\"", result, StringComparer.Ordinal);
+        Assert.Equal(expectedHex, serializedCborString, StringComparer.Ordinal);
     }
     [Fact]
-    public void SerializesIntersectionTypeComplexProperty1()
+    public async Task SerializesIntersectionTypeComplexProperty1()
     {
         // Given
         using var writer = _serializationWriterFactory.GetSerializationWriter(contentType);
@@ -126,15 +134,18 @@ public class IntersectionWrapperParseTests
 
         // When
         model.Serialize(writer);
-        using var resultStream = writer.GetSerializedContent();
-        using var streamReader = new StreamReader(resultStream);
-        var result = streamReader.ReadToEnd();
+        // Get the payload from the stream.
+        using var serializedStream = writer.GetSerializedContent();
+        var serializedCborString = await TestDataHelper.GetHexRepresentationFromStream(serializedStream, _cancellationTokenSource.Token);
+
+        // Assert
+        var expectedHex = TestDataHelper.GetCborHex("TestIntersectionTypeComplexProperty1");
 
         // Then
-        Assert.Equal("{\"id\":\"opaque\",\"officeLocation\":\"Montreal\",\"displayName\":\"McGill\"}", result, StringComparer.Ordinal);
+        Assert.Equal(expectedHex, serializedCborString, StringComparer.Ordinal);
     }
     [Fact]
-    public void SerializesIntersectionTypeComplexProperty2()
+    public async Task SerializesIntersectionTypeComplexProperty2()
     {
         // Given
         using var writer = _serializationWriterFactory.GetSerializationWriter(contentType);
@@ -145,20 +156,27 @@ public class IntersectionWrapperParseTests
                 DisplayName = "McGill",
                 Id = 10,
             },
+            ComposedType1 = new()
+            {
+                OfficeLocation = "Montreal",
+            },
         };
 
         // When
         model.Serialize(writer);
-        using var resultStream = writer.GetSerializedContent();
-        using var streamReader = new StreamReader(resultStream);
-        var result = streamReader.ReadToEnd();
+        // Get the payload from the stream.
+        using var serializedStream = writer.GetSerializedContent();
+        var serializedCborString = await TestDataHelper.GetHexRepresentationFromStream(serializedStream, _cancellationTokenSource.Token);
+
+        // Assert
+        var expectedHex = TestDataHelper.GetCborHex("TestIntersectionTypeComplexProperty2");
 
         // Then
-        Assert.Equal("{\"displayName\":\"McGill\",\"id\":10}", result, StringComparer.Ordinal);
+        Assert.Equal(expectedHex, serializedCborString, StringComparer.Ordinal);
     }
 
     [Fact]
-    public void SerializesIntersectionTypeComplexProperty3()
+    public async Task SerializesIntersectionTypeComplexProperty3()
     {
         // Given
         using var writer = _serializationWriterFactory.GetSerializationWriter(contentType);
@@ -166,23 +184,33 @@ public class IntersectionWrapperParseTests
         {
             ComposedType3 = new() {
                 new() {
-                    OfficeLocation = "Montreal",
-                    Id = "10",
-                },
-                new() {
                     OfficeLocation = "Ottawa",
                     Id = "11",
-                }
+                    AdditionalData = new Dictionary<string, object>{
+                        { "@odata.type", "#microsoft.graph.TestEntity"}
+                    }
+                },
+                new() {
+                    OfficeLocation = "Montreal",
+                    Id = "10",
+                    AdditionalData = new Dictionary<string, object>{
+                        { "@odata.type", "#microsoft.graph.TestEntity"}
+                    }
+                },
             },
         };
 
         // When
         model.Serialize(writer);
-        using var resultStream = writer.GetSerializedContent();
-        using var streamReader = new StreamReader(resultStream);
-        var result = streamReader.ReadToEnd();
+        // Get the payload from the stream.
+        using var serializedStream = writer.GetSerializedContent();
+        var serializedCborString = await TestDataHelper.GetHexRepresentationFromStream(serializedStream, _cancellationTokenSource.Token);
+
+        // Assert
+        var expectedHex = TestDataHelper.GetCborHex("TestIntersectionTypeComplexProperty3");
 
         // Then
-        Assert.Equal("[{\"id\":\"10\",\"officeLocation\":\"Montreal\"},{\"id\":\"11\",\"officeLocation\":\"Ottawa\"}]", result, StringComparer.Ordinal);
+        Assert.Equal(expectedHex, serializedCborString, StringComparer.Ordinal);
     }
+    public void Dispose() => _cancellationTokenSource.Dispose();
 }

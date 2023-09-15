@@ -9,6 +9,7 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests;
 
 public static class TestDataHelper
 {
+    public static MemoryStream GetCBorDataAsStream(string fileName) => new MemoryStream(GetCBorData(fileName));
     public static byte[] GetCBorData(string fileName)
     {
         var stringHexValue = GetCborHex(fileName);
