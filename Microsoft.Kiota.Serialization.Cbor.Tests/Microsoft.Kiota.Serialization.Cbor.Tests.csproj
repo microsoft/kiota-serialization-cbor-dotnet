@@ -30,7 +30,7 @@
     <ProjectReference Include="..\src\Microsoft.Kiota.Serialization.Cbor.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="TestData\*.hex" CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedResource Include="TestData\*.hex" />
   </ItemGroup>
 
 </Project>

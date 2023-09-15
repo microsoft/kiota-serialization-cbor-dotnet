@@ -20,7 +20,13 @@ public static class TestDataHelper
         }
         return result;
     }
-    public static string GetCborHex(string fileName) => File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetAssembly(typeof(TestDataHelper)).Location), "TestData", $"{fileName}.hex")); //async method not available for net462
+    public static string GetCborHex(string fileName)
+    {
+        using var ms = new MemoryStream();
+        var typeReference = typeof(TestDataHelper);
+        typeReference.GetTypeInfo().Assembly.GetManifestResourceStream($"{typeReference.Namespace}.TestData.{fileName}.hex").CopyTo(ms);
+        return Encoding.UTF8.GetString(ms.ToArray());
+    }
 
     public static async Task<string> GetHexRepresentationFromStream(Stream stream, CancellationToken cancellationToken)
     {
