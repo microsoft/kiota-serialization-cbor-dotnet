@@ -29,7 +29,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <param name="reader">The CborReader to initialize the node with</param>
         public CborParseNode(CborReader reader)
         {
-            value = LoadCborTree(reader);
+            value = LoadCborTree(reader) is CborParseNode node ? node.value : throw new InvalidOperationException($"unexpected value type during deserialization cbor kind : {reader.PeekState()}");
         }
         internal CborParseNode(object? value)
         {
@@ -48,7 +48,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
                         result.Add(LoadCborTree(rdr));
                     }
                     rdr.ReadEndArray();
-                    return result.ToArray();
+                    return new CborParseNode(result.ToArray());
                 case CborReaderState.StartMap:
                     rdr.ReadStartMap();
                     var map = new Dictionary<string, object?>();
@@ -58,7 +58,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
                         map.Add(key, LoadCborTree(rdr));
                     }
                     rdr.ReadEndMap();
-                    return map;
+                    return new CborParseNode(map);
                 case CborReaderState.Boolean:
                     return new CborParseNode(rdr.ReadBoolean());
                 case CborReaderState.DoublePrecisionFloat:
@@ -82,7 +82,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
                     rdr.ReadNull();
                     return new CborParseNode((object?)null);
                 default:
-                    throw new InvalidOperationException($"unexpected value type during deserialization json kind : {rdr.PeekState()}");
+                    throw new InvalidOperationException($"unexpected value type during deserialization cbor kind : {rdr.PeekState()}");
             }
         }
 
@@ -225,7 +225,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         {
             if(value is object?[] arrayValue)
             {
-                return arrayValue.OfType<Dictionary<string, object>>().Select(static x => new CborParseNode(x)).Select(x => x.GetObjectValue(factory));
+                return arrayValue.OfType<CborParseNode>().Select(x => x.GetObjectValue(factory));
             }
             return Enumerable.Empty<T>();
         }
@@ -275,7 +275,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <returns>A collection of objects</returns>
         public IEnumerable<T> GetCollectionOfPrimitiveValues<T>()
         {
-            if(value is object?[] arrayValue)
+            if(value is CborParseNode { value: object?[] arrayValue })
             {
                 var genericType = typeof(T);
                 foreach(var rawItem in arrayValue)
