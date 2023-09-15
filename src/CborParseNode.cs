@@ -10,7 +10,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Xml;
-using System.Xml.Linq;
 using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions.Serialization;
@@ -74,6 +73,8 @@ namespace Microsoft.Kiota.Serialization.Cbor
                     return new CborParseNode(dateTimeOffset);
                 case CborReaderState.TextString or CborReaderState.StartIndefiniteLengthTextString:
                     return new CborParseNode(rdr.ReadTextString());
+                case CborReaderState.ByteString when rdr.TryReadGuid(out var guid):
+                    return new CborParseNode(guid);
                 case CborReaderState.Undefined:
                 case CborReaderState.Null:
                     rdr.ReadNull();
@@ -141,14 +142,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// Get the guid value from the cbor node
         /// </summary>
         /// <returns>A guid value</returns>
-        public Guid? GetGuidValue()
-        {
-            var guidString = GetStringValue();
-            if(!Guid.TryParse(guidString, out var result))
-                return null;
-
-            return result;
-        }
+        public Guid? GetGuidValue() => value is Guid guidValue ? guidValue : null;
 
         /// <summary>
         /// Get the <see cref="DateTimeOffset"/> value from the cbor node
@@ -243,7 +237,6 @@ namespace Microsoft.Kiota.Serialization.Cbor
             {
                 foreach(var item in arrayValue)
                 {
-                    if(item is null) continue;
                     if(item is CborParseNode itemNode)
                         yield return itemNode.GetEnumValue<T>();
                 }

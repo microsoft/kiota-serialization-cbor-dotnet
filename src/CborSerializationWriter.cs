@@ -165,7 +165,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
         public void WriteGuidValue(string? key, Guid? value)
         {
             if(!string.IsNullOrEmpty(key) && value.HasValue) writer.WriteTextString(key!);
-            if(value.HasValue) writer.WriteTextString(value.Value.ToString());
+            if(value.HasValue) writer.WriteByteString(value.Value.ToByteArray());
         }
 
         /// <summary>
@@ -271,7 +271,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
                 if(!string.IsNullOrEmpty(key)) writer.WriteTextString(key!);
                 writer.WriteStartArray(values.Count());
                 foreach(var item in values)
-                    WriteObjectValue<T>(null, item);
+                    WriteObjectValue(null, item);
                 writer.WriteEndArray();
             }
         }
@@ -287,7 +287,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
                 if(!string.IsNullOrEmpty(key)) writer.WriteTextString(key!);
                 writer.WriteStartArray(values.Count());
                 foreach(var item in values)
-                    WriteEnumValue<T>(null, item);
+                    WriteEnumValue(null, item);
                 writer.WriteEndArray();
             }
         }

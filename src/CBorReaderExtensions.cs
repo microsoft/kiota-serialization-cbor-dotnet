@@ -21,5 +21,19 @@ static internal class CBorReaderExtensions
             return false;
         }
     }
+    static internal bool TryReadGuid(this CborReader reader, out Guid value)
+    {
+        try
+        {
+            var rawValue = reader.ReadByteString();
+            value = new Guid(rawValue);
+            return true;
+        }
+        catch
+        {
+            value = default;
+            return false;
+        }
+    }
 
 }
