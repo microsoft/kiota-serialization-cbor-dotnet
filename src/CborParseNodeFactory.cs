@@ -37,7 +37,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
             if(content is not MemoryStream ms)
             {
                 ms = new MemoryStream();
-                content.CopyTo(ms);
+                content.CopyToAsync(ms).GetAwaiter().GetResult();// so server side code doesn't hang
             }
             return new CborParseNode(new CborReader(ms.ToArray()));
         }
