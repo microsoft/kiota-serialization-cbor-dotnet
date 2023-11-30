@@ -35,12 +35,13 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         [Theory]
         [InlineData(null)]
         [InlineData("")]
-        public void ThrowsArgumentNullExceptionForNoContentType(string contentType)
+        public void ThrowsArgumentNullExceptionForNoContentType(string? contentType)
         {
             var data = TestDataHelper.GetCBorData("TestCborString");
             using var cborStream = new MemoryStream(data);
+#nullable disable
             var exception = Assert.Throws<ArgumentNullException>(() => _cborParseNodeFactory.GetRootParseNode(contentType, cborStream));
-
+#nullable restore
             // Assert
             Assert.NotNull(exception);
             Assert.Equal("contentType", exception.ParamName, StringComparer.Ordinal);

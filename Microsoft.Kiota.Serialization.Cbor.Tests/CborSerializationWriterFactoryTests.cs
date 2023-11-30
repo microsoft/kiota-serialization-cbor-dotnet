@@ -36,10 +36,12 @@ namespace Microsoft.Kiota.Serialization.Cbor.Tests
         [Theory]
         [InlineData(null)]
         [InlineData("")]
-        public void ThrowsArgumentNullExceptionForNoContentType(string contentType)
+        public void ThrowsArgumentNullExceptionForNoContentType(string? contentType)
         {
+#nullable disable
             var exception = Assert.Throws<ArgumentNullException>(() => _cborSerializationFactory.GetSerializationWriter(contentType));
-
+#nullable restore
+            
             // Assert
             Assert.NotNull(exception);
             Assert.Equal("contentType", exception.ParamName, StringComparer.Ordinal);
