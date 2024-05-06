@@ -7,6 +7,11 @@ on:
   pull_request:
     branches: [ 'main', 'dev' ]
 
+permissions:
+  contents: read #those permissions are required to run the codeql analysis
+  actions: read
+  security-events: write  
+
 jobs:
   build-and-test:
     runs-on: windows-latest # Temporary switch to windows till https://github.com/microsoft/vstest/issues/4549 is released in dotnet version after 7.0.400
