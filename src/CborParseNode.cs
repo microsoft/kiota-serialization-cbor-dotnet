@@ -243,15 +243,13 @@ namespace Microsoft.Kiota.Serialization.Cbor
         {
             if(value is object?[] arrayValue)
             {
-                List<T> result = new List<T>();
                 foreach(var item in arrayValue)
                 {
                     if(item is CborParseNode node)
                     {
-                        result.Add(node.GetObjectValue(factory));
+                        yield return node.GetObjectValue(factory);
                     }
                 }
-                return result;
             }
             return [];
         }
