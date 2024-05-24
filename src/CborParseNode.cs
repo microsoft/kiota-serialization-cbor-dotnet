@@ -332,30 +332,23 @@ namespace Microsoft.Kiota.Serialization.Cbor
         public IEnumerable<T> GetCollectionOfPrimitiveValues<T>()
         {
             var genericType = typeof(T);
-            List<T> result = new List<T>();
-
             if(value is object?[] arrayValue1)
-            {
-                foreach(var item in arrayValue1)
-                {
-                    if(item is CborParseNode node)
-                    {
-                        result.Add(GetItemValue<T>(genericType, node));
-                    }
-                }
-            }
+                return GetValuesFromArray<T>(genericType, arrayValue1);
             else if(value is CborParseNode { value: object?[] arrayValue2 })
+                return GetValuesFromArray<T>(genericType, arrayValue2);
+            else
+                return Enumerable.Empty<T>();
+        
+            IEnumerable<T> GetValuesFromArray<T>(Type genericType, object?[] array)
             {
-                foreach(var item in arrayValue2)
+                foreach (var item in array)
                 {
-                    if(item is CborParseNode node)
+                    if (item is CborParseNode node)
                     {
-                        result.Add(GetItemValue<T>(genericType, node));
+                        yield return GetItemValue<T>(genericType, node);
                     }
                 }
             }
-
-            return result.Count > 0 ? result : [];
         }
 
         /// <summary>
