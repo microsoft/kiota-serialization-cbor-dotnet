@@ -251,7 +251,6 @@ namespace Microsoft.Kiota.Serialization.Cbor
                     }
                 }
             }
-            return [];
         }
         /// <summary>
         /// Gets the collection of enum values of the node.
@@ -337,15 +336,15 @@ namespace Microsoft.Kiota.Serialization.Cbor
             else if(value is CborParseNode { value: object?[] arrayValue2 })
                 return GetValuesFromArray<T>(genericType, arrayValue2);
             else
-                return Enumerable.Empty<T>();
+                return [];
         
-            static IEnumerable<TItem> GetValuesFromArray<TItem>(Type genericType, object?[] array)
+            IEnumerable<TT> GetValuesFromArray<TT>(Type genericType, object?[] array)
             {
                 foreach (var item in array)
                 {
                     if (item is CborParseNode node)
                     {
-                        yield return GetItemValue<TItem>(genericType, node);
+                        yield return GetItemValue<TT>(genericType, node);
                     }
                 }
             }
@@ -462,22 +461,24 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// </summary>
         /// <param name="identifier">The identifier of the child node</param>
         /// <returns>An instance of <see cref="IParseNode"/></returns>
-        public void WriteCollectionOfPrimitiveValues<T>(string? key, IEnumerable<T>? values)
+        public IParseNode? GetChildNode(string identifier)
         {
-            if (values != null)
-            { 
-                //empty array is meaningful
-                if (!string.IsNullOrEmpty(key)) writer.WriteTextString(key!);
+            if (string.IsNullOrEmpty(identifier)) 
+                throw new ArgumentNullException(nameof(identifier));
                 
-                // Count elements without using LINQ
-                int count = 0;
-                foreach (var _ in values) count++;
-                
-                writer.WriteStartArray(count);
-                foreach (var collectionValue in values)
-                    WriteAnyValue(null, collectionValue);
-                writer.WriteEndArray();
+            if (value is Dictionary<string, object?> dictionary)
+            {
+                object? childValue;
+                if (dictionary.TryGetValue(identifier, out childValue))
+                {
+                    if (childValue is CborParseNode childNode)
+                        return childNode;
+                        
+                    return AssignEventValues(new CborParseNode(childValue));
+                }
             }
+
+            return default;
         }
 
         private CborParseNode AssignEventValues(CborParseNode node)
