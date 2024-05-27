@@ -339,13 +339,13 @@ namespace Microsoft.Kiota.Serialization.Cbor
             else
                 return Enumerable.Empty<T>();
         
-            IEnumerable<T> GetValuesFromArray<T>(Type genericType, object?[] array)
+            static IEnumerable<TItem> GetValuesFromArray<TItem>(Type genericType, object?[] array)
             {
                 foreach (var item in array)
                 {
                     if (item is CborParseNode node)
                     {
-                        yield return GetItemValue<T>(genericType, node);
+                        yield return GetItemValue<TItem>(genericType, node);
                     }
                 }
             }
