@@ -288,10 +288,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
 
                 // Count elements without using LINQ
                 int count = 0;
-                foreach(var _ in values)
-                {
-                    count++;
-                }
+                foreach(var _ in values) count++;
 
                 writer.WriteStartArray(count);
                 foreach(var item in values)
