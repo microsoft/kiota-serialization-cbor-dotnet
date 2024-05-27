@@ -262,7 +262,6 @@ namespace Microsoft.Kiota.Serialization.Cbor
             }
         }
 
-
         /// <summary>
         /// Write the collection of primitives of type  <typeparam name="T"/>
         /// </summary>
