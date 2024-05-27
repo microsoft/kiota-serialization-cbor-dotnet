@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Formats.Cbor;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
@@ -216,17 +215,23 @@ namespace Microsoft.Kiota.Serialization.Cbor
 
             var type = typeof(T);
             rawValue = ToEnumRawName<T>(type, rawValue!);
-            if(type.GetCustomAttributes<FlagsAttribute>().Any())
+            if(type.IsDefined(typeof(FlagsAttribute)))
             {
-                return (T)(object)rawValue!
-                    .Split(',')
-                    .Select(static x => Enum.TryParse<T>(x, true, out var result) ? result : (T?)null)
-                    .Where(static x => !x.Equals(null))
-                    .Select(static x => (int)(object)x!)
-                    .Sum();
+                string[] parts = rawValue.Split(',');
+                int sum = 0;
+                foreach(var part in parts)
+                {
+                    if(Enum.TryParse<T>(part, true, out var result))
+                    {
+                        sum += (int)(object)result;
+                    }
+                }
+                return (T)(object)sum;
             }
             else
+            {
                 return Enum.TryParse<T>(rawValue, true, out var result) ? result : null;
+            }
         }
 
         /// <summary>
@@ -238,9 +243,14 @@ namespace Microsoft.Kiota.Serialization.Cbor
         {
             if(value is object?[] arrayValue)
             {
-                return arrayValue.OfType<CborParseNode>().Select(x => x.GetObjectValue(factory));
+                foreach(var item in arrayValue)
+                {
+                    if(item is CborParseNode node)
+                    {
+                        yield return node.GetObjectValue(factory);
+                    }
+                }
             }
-            return Enumerable.Empty<T>();
         }
         /// <summary>
         /// Gets the collection of enum values of the node.
@@ -322,11 +332,22 @@ namespace Microsoft.Kiota.Serialization.Cbor
         {
             var genericType = typeof(T);
             if(value is object?[] arrayValue1)
-                return arrayValue1.OfType<CborParseNode>().Select(x => GetItemValue<T>(genericType, x));
+                return GetValuesFromArray<T>(genericType, arrayValue1);
             else if(value is CborParseNode { value: object?[] arrayValue2 })
-                return arrayValue2.OfType<CborParseNode>().Select(x => GetItemValue<T>(genericType, x));
+                return GetValuesFromArray<T>(genericType, arrayValue2);
             else
-                return Enumerable.Empty<T>();
+                return [];
+        
+            IEnumerable<TT> GetValuesFromArray<TT>(Type genericType, object?[] array)
+            {
+                foreach (var item in array)
+                {
+                    if (item is CborParseNode node)
+                    {
+                        yield return GetItemValue<TT>(genericType, node);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -365,8 +386,11 @@ namespace Microsoft.Kiota.Serialization.Cbor
             //the below line fixes the issue
             var fieldDeserializers = (IDictionary<string, Action<IParseNode>>)item.GetType().GetMethod("GetFieldDeserializers").Invoke(item, null);
 
-            foreach(var entry in dictionaryValue.Where(x => x.Value is not null))
-            {// If the property is already null just continue. As calling functions like GetDouble,GetBoolValue do not process CborReaderState.Null.
+            foreach(var entry in dictionaryValue)
+            {
+                if(entry.Value is null) continue;
+
+                // If the property is already null just continue. As calling functions like GetDouble,GetBoolValue do not process CborReaderState.Null.
                 var fieldName = entry.Key;
                 if(fieldDeserializers.ContainsKey(fieldName) && entry.Value is CborParseNode valueParseNode)
                 {
@@ -403,14 +427,34 @@ namespace Microsoft.Kiota.Serialization.Cbor
             string str => str,
             int[] intArray => intArray,
             string[] strArray => strArray,
-            object?[] arrayValue => arrayValue.Select(TryGetAnything).ToArray(),
-            List<object?> listValue => listValue.Select(TryGetAnything).ToArray(),
+            object?[] arrayValue => ProcessArray(arrayValue),
+            List<object?> listValue => ProcessList(listValue),
             Dictionary<string, object?> dictionaryValue => dictionaryValue,
             CborParseNode node => TryGetAnything(node.value),
             bool b => b,
             null => null,
             _ => throw new InvalidOperationException($"unexpected additional value type during deserialization json kind : {val.GetType()}"),
         };
+
+        private static object?[] ProcessArray(object?[] arrayValue)
+        {
+            var newArray = new object?[arrayValue.Length];
+            for(int index = 0; index < arrayValue.Length; index++)
+            {
+                newArray[index] = TryGetAnything(arrayValue[index]);
+            }
+            return newArray;
+        }
+
+        private static object?[] ProcessList(List<object?> listValue)
+        {
+            var newArray = new object?[listValue.Count];
+            for(int index = 0; index < listValue.Count; index++)
+            {
+                newArray[index] = TryGetAnything(listValue[index]);
+            }
+            return newArray;
+        }
 
         /// <summary>
         /// Get the child node of the specified identifier
@@ -419,16 +463,24 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <returns>An instance of <see cref="IParseNode"/></returns>
         public IParseNode? GetChildNode(string identifier)
         {
-            if(string.IsNullOrEmpty(identifier)) throw new ArgumentNullException(nameof(identifier));
-            if(value is Dictionary<string, object?> dictionary && dictionary.TryGetValue(identifier, out var childValue))
+            if (string.IsNullOrEmpty(identifier)) 
+                throw new ArgumentNullException(nameof(identifier));
+                
+            if (value is Dictionary<string, object?> dictionary)
             {
-                if(childValue is CborParseNode childNode)
-                    return childNode;
-                return AssignEventValues(new CborParseNode(childValue));
+                object? childValue;
+                if (dictionary.TryGetValue(identifier, out childValue))
+                {
+                    if (childValue is CborParseNode childNode)
+                        return childNode;
+                        
+                    return AssignEventValues(new CborParseNode(childValue));
+                }
             }
 
             return default;
         }
+
         private CborParseNode AssignEventValues(CborParseNode node)
         {
             node.OnBeforeAssignFieldValues = OnBeforeAssignFieldValues;
@@ -438,11 +490,14 @@ namespace Microsoft.Kiota.Serialization.Cbor
 
         private static string ToEnumRawName<T>(Type type, string value) where T : struct, Enum
         {
-            if(type.GetMembers().FirstOrDefault(member =>
-                   member.GetCustomAttribute<EnumMemberAttribute>() is { } attr &&
-                   value.Equals(attr.Value, StringComparison.Ordinal))?.Name is { } strValue)
-                return strValue;
-
+            foreach(var member in type.GetMembers())
+            {
+                var attr = member.GetCustomAttribute<EnumMemberAttribute>();
+                if(attr != null && value.Equals(attr.Value, StringComparison.Ordinal))
+                {
+                    return member.Name;
+                }
+            }
             return value;
         }
 

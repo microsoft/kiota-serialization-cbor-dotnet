@@ -1,4 +1,4 @@
-﻿// ------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the MIT License.  See License in the project root for license information.
 // ------------------------------------------------------------------------------
 
@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Formats.Cbor;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Xml;
@@ -232,13 +231,34 @@ namespace Microsoft.Kiota.Serialization.Cbor
             if(!string.IsNullOrEmpty(key) && value.HasValue) writer.WriteTextString(key!);
             if(value.HasValue)
             {
-                if(typeof(T).GetCustomAttributes<FlagsAttribute>().Any())
-                    writer.WriteTextString(Enum.GetValues(typeof(T))
-                                            .Cast<T>()
-                                            .Where(x => value.Value.HasFlag(x))
-                                            .Select(GetEnumName)
-                                            .Aggregate((x, y) => $"{x},{y}") ?? "");
-                else writer.WriteTextString(GetEnumName(value.Value) ?? "");
+                if(typeof(T).GetCustomAttributes(typeof(FlagsAttribute), false).Length > 0)
+                {
+                    var enumValues = Enum.GetValues(typeof(T));
+                    var selectedValues = new List<string>();
+
+                    foreach(T enumValue in enumValues)
+                    {
+                        if(value.Value.HasFlag(enumValue))
+                        {
+                            var name = GetEnumName(enumValue);
+                            if(name is not null) selectedValues.Add(name);
+                        }
+                    }
+
+                    if (selectedValues.Count > 0)
+                    {
+                        var result = selectedValues[0];
+                        for (int i = 1; i < selectedValues.Count; i++)
+                        {
+                            result += $",{selectedValues[i]}";
+                        }
+                        writer.WriteTextString(result);
+                    }
+                }
+                else
+                {
+                    writer.WriteTextString(GetEnumName(value.Value) ?? "");
+                }
             }
         }
 
@@ -250,9 +270,15 @@ namespace Microsoft.Kiota.Serialization.Cbor
         public void WriteCollectionOfPrimitiveValues<T>(string? key, IEnumerable<T>? values)
         {
             if(values != null)
-            { //empty array is meaningful
+            {
+                //empty array is meaningful
                 if(!string.IsNullOrEmpty(key)) writer.WriteTextString(key!);
-                writer.WriteStartArray(values.Count());
+
+                // Count elements without using LINQ
+                int count = 0;
+                foreach(var _ in values) count++;
+
+                writer.WriteStartArray(count);
                 foreach(var collectionValue in values)
                     WriteAnyValue(null, collectionValue);
                 writer.WriteEndArray();
@@ -267,14 +293,21 @@ namespace Microsoft.Kiota.Serialization.Cbor
         public void WriteCollectionOfObjectValues<T>(string? key, IEnumerable<T>? values) where T : IParsable
         {
             if(values != null)
-            { //empty array is meaningful
+            {
+                //empty array is meaningful
                 if(!string.IsNullOrEmpty(key)) writer.WriteTextString(key!);
-                writer.WriteStartArray(values.Count());
+
+                // Count elements without using LINQ
+                int count = 0;
+                foreach(var _ in values) count++;
+
+                writer.WriteStartArray(count);
                 foreach(var item in values)
                     WriteObjectValue(null, item);
                 writer.WriteEndArray();
             }
         }
+
         /// <summary>
         /// Writes the specified collection of enum values to the stream with an optional given key.
         /// </summary>
@@ -283,14 +316,21 @@ namespace Microsoft.Kiota.Serialization.Cbor
         public void WriteCollectionOfEnumValues<T>(string? key, IEnumerable<T?>? values) where T : struct, Enum
         {
             if(values != null)
-            { //empty array is meaningful
+            {
+                //empty array is meaningful
                 if(!string.IsNullOrEmpty(key)) writer.WriteTextString(key!);
-                writer.WriteStartArray(values.Count());
+
+                // Count elements without using LINQ
+                int count = 0;
+                foreach(var _ in values) count++;
+
+                writer.WriteStartArray(count);
                 foreach(var item in values)
                     WriteEnumValue(null, item);
                 writer.WriteEndArray();
             }
         }
+
         /// <summary>
         /// Writes the specified byte array as a base64 string to the stream with an optional given key.
         /// </summary>
@@ -298,8 +338,8 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <param name="value">The byte array to be written.</param>
         public void WriteByteArrayValue(string? key, byte[]? value)
         {
-            if(value != null)//empty array is meaningful
-                WriteStringValue(key, value.Any() ? Convert.ToBase64String(value) : string.Empty);
+            if(value is not null) //empty array is meaningful
+                WriteStringValue(key, value.Length > 0 ? Convert.ToBase64String(value) : string.Empty);
         }
 
         /// <summary>
@@ -310,8 +350,17 @@ namespace Microsoft.Kiota.Serialization.Cbor
         /// <param name="additionalValuesToMerge">The additional values to merge to the main value when serializing an intersection wrapper.</param>
         public void WriteObjectValue<T>(string? key, T? value, params IParsable?[] additionalValuesToMerge) where T : IParsable
         {
-            var filteredAdditionalValuesToMerge = additionalValuesToMerge.OfType<IParsable>().ToArray();
-            if(value != null || filteredAdditionalValuesToMerge.Any())
+            // Filter additionalValuesToMerge without using LINQ
+            List<IParsable> filteredAdditionalValuesToMerge = new List<IParsable>();
+            foreach(var item in additionalValuesToMerge)
+            {
+                if(item is IParsable parsable)
+                {
+                    filteredAdditionalValuesToMerge.Add(parsable);
+                }
+            }
+
+            if(value != null || filteredAdditionalValuesToMerge.Count > 0)
             {
                 if(!string.IsNullOrEmpty(key)) writer.WriteTextString(key!);
                 if(value != null) OnBeforeObjectSerialization?.Invoke(value);
@@ -443,8 +492,11 @@ namespace Microsoft.Kiota.Serialization.Cbor
             if(Enum.GetName(type, value) is not { } name)
                 throw new ArgumentException($"Invalid Enum value {value} for enum of type {type}");
 
-            if(type.GetMember(name).FirstOrDefault()?.GetCustomAttribute<EnumMemberAttribute>() is { } attribute)
-                return attribute.Value;
+            foreach(var member in type.GetMember(name))
+            {
+                var attribute = member.GetCustomAttribute<EnumMemberAttribute>();
+                if(attribute != null) return attribute.Value;
+            }
 
             return name.ToFirstCharacterLowerCase();
         }
