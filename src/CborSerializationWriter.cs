@@ -1,4 +1,4 @@
-﻿// ------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the MIT License.  See License in the project root for license information.
 // ------------------------------------------------------------------------------
 
@@ -234,15 +234,26 @@ namespace Microsoft.Kiota.Serialization.Cbor
                 if(typeof(T).GetCustomAttributes(typeof(FlagsAttribute), false).Length > 0)
                 {
                     var enumValues = Enum.GetValues(typeof(T));
-                    var flagValues = new List<string>();
+                    var selectedValues = new List<string>();
+
                     foreach(T enumValue in enumValues)
                     {
                         if(value.Value.HasFlag(enumValue))
                         {
-                            flagValues.Add(Enum.GetName(typeof(T), enumValue));
+                            var name = GetEnumName(enumValue);
+                            if(name is not null) selectedValues.Add(name);
                         }
                     }
-                    writer.WriteTextString(string.Join(",", flagValues));
+
+                    if (selectedValues.Count > 0)
+                    {
+                        var result = selectedValues[0];
+                        for (int i = 1; i < selectedValues.Count; i++)
+                        {
+                            result += $",{selectedValues[i]}";
+                        }
+                        writer.WriteTextString(result);
+                    }
                 }
                 else
                 {
@@ -250,6 +261,7 @@ namespace Microsoft.Kiota.Serialization.Cbor
                 }
             }
         }
+
 
         /// <summary>
         /// Write the collection of primitives of type  <typeparam name="T"/>
@@ -481,19 +493,11 @@ namespace Microsoft.Kiota.Serialization.Cbor
             if(Enum.GetName(type, value) is not { } name)
                 throw new ArgumentException($"Invalid Enum value {value} for enum of type {type}");
 
-            // Get the first member with the EnumMemberAttribute without using LINQ
-            EnumMemberAttribute? attribute = null;
             foreach(var member in type.GetMember(name))
             {
-                attribute = member.GetCustomAttribute<EnumMemberAttribute>();
-                if(attribute != null)
-                {
-                    break;
-                }
+                var attribute = member.GetCustomAttribute<EnumMemberAttribute>();
+                if(attribute != null) return attribute.Value;
             }
-
-            if(attribute is { } attr)
-                return attr.Value;
 
             return name.ToFirstCharacterLowerCase();
         }
